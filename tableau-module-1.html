@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>Tableau Essentials — Module 1: Getting Started with Tableau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── DESIGN TOKENS ──────────────────────────────────────────── */
+:root{
+  --blue:#1565C0;
+  --blue-dark:#0D47A1;
+  --blue-light:#E3F2FD;
+  --blue-mid:#90CAF9;
+  --navy:#0D47A1;
+  --text:#1a2332;
+  --text2:#4a5568;
+  --text-dim:#4a5568;
+  --text-dimmer:#8fa3bc;
+  --muted:#8fa3bc;
+  --border:#d0dae8;
+  --bg:#0f1117;         /* Dark page background */
+  --bg2:#ffffff;        /* Card / surface background */
+  --bg3:#f0f4f9;        /* Subtle tinted surface */
+  --green:#1a6b3a;
+  --green-light:#e8f5ed;
+  --orange:#92600a;
+  --orange-light:#fff8e6;
+  --coral:#c0392b;
+  --coral-light:#fdf0ee;
+  --purple:#5b4fcf;
+  --purple-light:#f5f0ff;
+  --success:#43A047;    /* GREEN — completed state */
+  --success-dark:#2E7D32;
+  --danger:#DC2626;     /* RED  — "Mark as Completed" default */
+  --danger-dark:#B91C1C;
+  --radius:12px;
+  --shadow:0 4px 12px rgba(15,23,42,.06);
+  --font-sans:'Source Sans 3','Segoe UI',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code','Source Code Pro',Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+a{color:var(--blue);text-decoration:none;}
+a:hover{color:var(--blue-dark);}
+code,pre,.mono{font-family:var(--font-mono);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── AUTH OVERLAY ───────────────────────────────────────────── */
+#auth-overlay,.auth-overlay{position:fixed;inset:0;background:rgba(20,30,50,.85);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:#fff;border-radius:20px;padding:48px 44px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;}
+.auth-card img{height:38px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;}
+.auth-card h2{font-size:1.3rem;font-weight:800;color:#0f172a;margin-bottom:8px;}
+.auth-card p{color:#64748b;font-size:.95rem;line-height:1.6;margin-bottom:24px;}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#2563EB;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:.95rem;font-weight:700;cursor:pointer;width:100%;transition:all .2s;box-shadow:0 2px 8px rgba(37,99,235,.35);}
+.google-btn:hover{background:#1D4ED8;transform:translateY(-1px);}
+.auth-divider{margin:16px 0 14px;color:#9ca3af;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;}
+.auth-input{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:11px 13px;font-size:.9rem;margin-bottom:8px;outline:none;font-family:var(--font-sans);color:#111827;background:#fff;display:block;box-sizing:border-box;}
+.auth-input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.email-signin-btn{width:100%;background:#2563EB;color:#fff;border:none;border-radius:12px;padding:13px;font-size:.92rem;font-weight:700;cursor:pointer;margin-top:4px;transition:all .2s;}
+.email-signin-btn:hover{background:#1D4ED8;transform:translateY(-1px);}
+#ep-error{display:none;font-size:.82rem;color:#dc2626;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:8px 12px;margin-top:4px;}
+
+/* ── LOADING ────────────────────────────────────────────────── */
+#loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:none;align-items:center;justify-content:center;}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+
+/* ── HEADER / NAV ───────────────────────────────────────────── */
+.header{background:#1565C0;border-bottom:none;padding:13px 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.35);}
+.header-left{display:flex;align-items:center;gap:10px;font-size:.88rem;color:rgba(255,255,255,.8);}
+.header-left img{height:28px;}
+.header-left a{color:#fff;font-weight:600;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.user-chip{display:flex;align-items:center;gap:7px;font-size:.82rem;color:#fff;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:4px 12px 4px 4px;}
+.user-chip img{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.5);}
+.btn-sm{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:7px;cursor:pointer;font-size:.8rem;transition:all .15s;font-family:var(--font-sans);}
+.btn-sm:hover{background:rgba(255,255,255,.25);}
+
+/* ── LAYOUT ─────────────────────────────────────────────────── */
+.layout{display:flex;min-height:calc(100vh - 54px);}
+
+/* ── SIDEBAR ────────────────────────────────────────────────── */
+.sidebar{width:275px;background:var(--bg2);border-right:1px solid var(--border);padding:18px 0;overflow-y:auto;position:sticky;top:54px;height:calc(100vh - 54px);flex-shrink:0;}
+.sidebar-title{padding:0 18px 10px;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dimmer);font-family:var(--font-mono);border-bottom:1px solid var(--border);margin-bottom:8px;}
+.sidebar-progress{padding:10px 18px;background:var(--bg3);margin:0 10px 10px;border-radius:8px;}
+.sidebar-progress-bar{background:var(--border);border-radius:99px;height:4px;margin-top:5px;overflow:hidden;}
+.sidebar-progress-fill{height:100%;border-radius:99px;background:var(--success);transition:width .3s;}
+.nav-item{padding:9px 18px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;display:flex;align-items:center;gap:9px;font-size:.85rem;color:var(--text);}
+.nav-item:hover{background:var(--bg3);}
+.nav-item.active{border-left-color:var(--blue);background:var(--blue-light);color:var(--blue);font-weight:600;}
+.nav-item.completed{color:var(--success);}
+.nav-badge{font-size:.63rem;padding:2px 6px;border-radius:3px;font-weight:700;font-family:var(--font-mono);}
+.badge-foundation{background:var(--green-light);color:var(--green);}
+.badge-essential{background:var(--blue-light);color:var(--blue);}
+.badge-important{background:var(--orange-light);color:var(--orange);}
+.nav-footer{padding:14px 18px;border-top:1px solid var(--border);margin-top:auto;font-size:.78rem;color:var(--text-dimmer);}
+.nav-btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-family:var(--font-mono);color:var(--blue);text-decoration:none;padding:10px 18px;border:1px solid var(--blue-mid);border-radius:8px;background:var(--blue-light);font-weight:600;cursor:pointer;}
+.nav-btn:hover{background:var(--blue-mid);}
+.nav-btn.secondary{background:var(--bg2);color:var(--text-dim);border-color:var(--border);}
+
+/* ── MAIN CONTENT ───────────────────────────────────────────── */
+.content{flex:1;padding:30px 38px;max-width:840px;}
+.module-hero{margin-bottom:28px;}
+.module-hero h1{font-size:1.9rem;font-weight:800;margin-bottom:7px;color:var(--text);}
+.module-hero p{color:var(--text-dim);font-size:.97rem;}
+.module-meta{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.meta-chip{font-size:.76rem;padding:4px 10px;border-radius:6px;font-weight:600;}
+.chip-weight{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);}
+.chip-sections{background:var(--green-light);color:var(--green);border:1px solid #a3d4b8;}
+
+/* ── SECTION ACCORDION ──────────────────────────────────────── */
+.section-block{margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg2);}
+.section-header{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg2);user-select:none;transition:background .12s;}
+.section-header:hover{background:var(--bg3);}
+.section-num{font-family:var(--font-mono);font-weight:700;color:var(--blue);font-size:.9rem;min-width:28px;}
+.section-title{flex:1;font-size:1rem;font-weight:600;color:var(--text);}
+.section-toggle{color:var(--text-dimmer);font-size:.85rem;transition:transform .2s;}
+.section-toggle.open{transform:rotate(180deg);}
+.section-body{display:none;padding:18px 22px 14px;border-top:1px solid var(--border);font-size:.93rem;color:var(--text-dim);line-height:1.75;}
+.section-body.open{display:block;}
+.section-body h3{color:var(--text);font-size:1.05rem;margin:16px 0 8px;font-weight:700;}
+.section-body h3:first-child{margin-top:0;}
+.section-body h4{color:var(--text);font-size:.95rem;margin:12px 0 6px;font-weight:600;}
+.section-body p{margin-bottom:10px;}
+.section-body ul,.section-body ol{margin:8px 0 10px 20px;}
+.section-body li{margin-bottom:4px;}
+.section-body code{font-family:var(--font-mono);font-size:.83rem;background:var(--bg3);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:#0f4a7a;}
+.section-body pre{background:#1e2433;color:#cdd6f4;padding:16px;border-radius:8px;font-size:.83rem;font-family:var(--font-mono);overflow-x:auto;margin:12px 0;position:relative;}
+
+/* ── CALLOUT BOXES ──────────────────────────────────────────── */
+.callout{border-left:4px solid var(--blue);background:var(--blue-light);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;}
+.callout h4{color:var(--blue);font-size:.9rem;margin-bottom:6px;font-weight:700;}
+.callout-tip{border-left-color:var(--green);background:var(--green-light);}
+.callout-tip h4{color:var(--green);}
+.callout-warn{border-left-color:#92600a;background:var(--orange-light);}
+.callout-warn h4{color:#92600a;}
+.callout-info{border-left-color:var(--blue);background:var(--blue-light);}
+.callout-info h4{color:var(--blue);}
+
+/* ── ANALOGY BOXES ──────────────────────────────────────────── */
+.analogy-box{background:var(--blue-light);border-radius:8px;padding:14px 18px;margin:12px 0;}
+.analogy-box h4{margin-bottom:10px;color:var(--blue);font-size:.93rem;font-weight:700;}
+.analogy-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:.88rem;}
+.analogy-row strong{color:var(--text);min-width:120px;}
+
+/* ── DIAGRAMS ────────────────────────────────────────────────── */
+.diagram{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:18px;margin:14px 0;text-align:center;}
+.diagram-title{font-size:.7rem;color:var(--text-dimmer);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:12px;letter-spacing:.06em;font-weight:600;}
+.diagram-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:8px 0;}
+.diagram-box{padding:8px 14px;border-radius:6px;font-size:.83rem;font-weight:600;font-family:var(--font-mono);}
+.diagram-box.blue{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);}
+.diagram-box.accent{background:var(--blue);color:#fff;}
+.diagram-box.green{background:var(--green-light);color:var(--green);border:1px solid #a3d4b8;}
+.diagram-box.purple{background:var(--purple-light);color:var(--purple);border:1px solid #c4bdf0;}
+.diagram-box.red{background:var(--coral-light);color:var(--coral);border:1px solid #f0b8b2;}
+
+/* ── TEST QUESTIONS ─────────────────────────────────────────── */
+.test-questions{background:var(--orange-light);border:1px solid #f0d4a0;border-radius:8px;padding:14px 18px;margin:14px 0;}
+.test-questions h4{color:#92600a;margin-bottom:8px;font-weight:700;font-size:.93rem;}
+.test-questions ul{margin-left:18px;}
+.test-questions li{color:var(--text-dim);font-size:.88rem;}
+
+/* ── COMPLETE BUTTON ─────────────────────────────────────────
+   DEFAULT (not done): RED  → "I still need to mark this"
+   DONE state:         GREEN → "Section completed ✓"
+   ─────────────────────────────────────────────────────────── */
+.complete-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--danger);    /* RED by default */
+  color:#fff;border:none;border-radius:8px;
+  padding:10px 24px;font-size:.95rem;font-weight:700;
+  cursor:pointer;margin-top:16px;
+  transition:background .2s,transform .1s;
+  font-family:var(--font-sans);
+}
+.complete-btn:hover:not(:disabled){
+  background:var(--danger-dark);
+  transform:translateY(-1px);
+}
+.complete-btn.done{
+  background:var(--success);   /* GREEN when completed */
+  cursor:not-allowed;
+}
+.complete-btn:disabled{cursor:not-allowed;}
+.save-indicator{font-size:.75rem;color:var(--text-dimmer);font-family:var(--font-mono);margin-left:8px;}
+/* ── LAB BLOCKS ─────────────────────────────────────────────── */
+.lab{background:#f0f4f9;border:1px solid #d0dae8;border-left:4px solid var(--blue);border-radius:8px;padding:18px 22px;margin:16px 0;}
+.lab h4{color:var(--blue);font-size:.95rem;margin-bottom:4px;font-weight:700;}
+.lab p{margin:4px 0 10px;color:var(--text2);font-size:.88rem;}
+.lab ol{margin:10px 0 10px 18px;}
+.lab li{margin-bottom:7px;font-size:.9rem;line-height:1.6;}
+.lab code{font-family:var(--font-mono);font-size:.82rem;background:#e8f0fe;border:1px solid #c5d5f5;padding:1px 5px;border-radius:4px;color:#1a4fa0;}
+.lab-expected{background:#e8f5ed;border:1px solid #a3d4b8;border-radius:6px;padding:10px 14px;margin-top:12px;font-size:.88rem;color:var(--green);}
+.lab-expected strong{color:var(--green);}
+.lab-download{background:var(--orange-light);border:1px solid #f0d4a0;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:.88rem;color:var(--orange);}
+.lab-download strong{color:var(--orange);}
+
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH OVERLAY ═══════════════════════════════════════════ -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <img src="https://sflearningdevelopment.github.io/sf-internal-kubernetes-certification/sourcefuse-logo.png" alt="SourceFuse"/>
+    <h2>Sign In Required</h2>
+    <p>Sign in with your SourceFuse Google account to access this module.</p>
+    <button class="google-btn" id="signin-btn">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+      Sign in with Google
+    </button>
+    <div class="auth-divider">OR</div>
+    <input id="ep-email" type="email" placeholder="you@sourcefuse.com" autocomplete="email" class="auth-input">
+    <input id="ep-password" type="password" placeholder="Password" autocomplete="current-password" class="auth-input">
+    <button onclick="sfEmailSignIn()" class="email-signin-btn">Sign in with Email</button>
+    <div id="ep-error"></div>
+  </div>
+</div>
+
+<div id="loading-overlay"><div class="spinner"></div></div>
+
+<div id="app" style="display:none;">
+
+<!-- ══ HEADER ════════════════════════════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <img src="https://sflearningdevelopment.github.io/sf-internal-kubernetes-certification/sourcefuse-logo.png" alt="SourceFuse"/>
+    <a href="tableau-dashboard.html?v=2026-06-01-v1">← Dashboard</a> / Module 1
+  </div>
+  <div class="header-right">
+    <div class="user-chip">
+      <img id="user-avatar" src="" alt=""/>
+      <span id="user-name" style="font-size:.82rem;"></span>
+    </div>
+    <button class="btn-sm" id="signout-btn">Sign Out</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+  <nav class="sidebar">
+    <div class="sidebar-title">Module 1 — 7 Sections</div>
+    <div class="sidebar-progress">
+      <div style="font-size:.78rem;color:var(--text2);display:flex;justify-content:space-between;">
+        <span>Progress</span><span id="sidebar-pct">0%</span>
+      </div>
+      <div class="sidebar-progress-bar">
+        <div class="sidebar-progress-fill" id="sidebar-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="nav-items"></div><!-- Dynamically populated by JS -->
+    <div class="nav-footer">
+      <a href="tableau-dashboard.html?v=2026-06-01-v1" class="nav-btn secondary">← Dashboard</a>
+      <a href="tableau-module-2.html?v=2026-06-01-v1" class="nav-btn">Module 2: Data Preparation &amp; Tableau Prep →</a>
+    </div>
+  </nav>
+
+  <!-- ══ MAIN CONTENT ════════════════════════════════════════ -->
+  <div class="content">
+    <div class="module-hero">
+      <h1>📊 Module 1: Getting Started with Tableau</h1>
+      <p>Get to grips with Tableau Desktop — from connecting your first dataset to building interactive charts and understanding the core data model.</p>
+      <div class="module-meta">
+        <span class="meta-chip chip-weight">15% Exam Weight</span>
+        <span class="meta-chip chip-sections">7 Sections</span>
+      </div>
+    </div>
+    <div id="sections-container"></div><!-- Dynamically populated by JS -->
+  </div>
+
+</div><!-- .layout -->
+</div><!-- #app -->
+
+<!-- ══════════════════════════════════════════════════════════
+  FIREBASE + CONTENT
+══════════════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }       from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup,
+         signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+/* ── Firebase config ─────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyC-I-IOCq2fCwa471fsD5xOn6SYQSBDp7Q",
+  authDomain:        "sfcertification-grafana.firebaseapp.com",
+  projectId:         "sfcertification-grafana",
+  storageBucket:     "sfcertification-grafana.firebasestorage.app",
+  messagingSenderId: "227322696511",
+  appId:             "1:227322696511:web:12e7ced7dd3d45fa06798a"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ── Module identity ─────────────────────────────────────── */
+const MODULE_KEY = 'tb1'; // e.g. 'm1', 'pm1', 'k8s_m1'
+const MODULE_NUM = 1;             // integer
+
+/* ── Section difficulty badge labels ────────────────────── */
+const BADGES       = { foundation:'Foundation', essential:'Essential', important:'Important' };
+const BADGE_CLASSES= { foundation:'badge-foundation', essential:'badge-essential', important:'badge-important' };
+
+/* ════════════════════════════════════════════════════════════
+  SECTIONS ARRAY — replace with your course content
+  Each section:
+    id:      unique integer (1-based within this module)
+    title:   section heading shown in sidebar + accordion
+    badge:   'foundation' | 'essential' | 'important'
+    content: HTML string for the section body
+             Use the helper elements in CSS:
+             .callout .callout-tip .callout-warn .callout-info
+             .analogy-box .analogy-row
+             .diagram .diagram-row .diagram-box
+             .test-questions
+════════════════════════════════════════════════════════════ */
+const SECTIONS = [
+  // ── SECTION 1 ────────────────────────────────────────────────────────────
+  {
+    id: 1,
+    title: 'What is Tableau and Where It Fits',
+    badge: 'foundation',
+    content: `
+      <h3>Tableau in the Modern BI Landscape</h3>
+      <p>Tableau is a visual analytics platform that transforms raw data into interactive, shareable dashboards. It sits in the <strong>presentation and exploration layer</strong> of the data stack — after data has been collected, stored, and optionally prepared. Unlike spreadsheets or raw SQL outputs, Tableau is designed for non-technical users to explore data visually without writing code.</p>
+
+      <div class="analogy-box">
+        <h4>🌍 Real-World Analogy</h4>
+        <div class="analogy-row"><strong>Raw data in a database</strong><span>→</span><span>Unprocessed ingredients in a kitchen</span></div>
+        <div class="analogy-row"><strong>Tableau Desktop</strong><span>→</span><span>The chef who turns ingredients into a dish people can appreciate</span></div>
+        <div class="analogy-row"><strong>Published dashboard</strong><span>→</span><span>The plated meal served to stakeholders</span></div>
+      </div>
+
+      <h3>The Tableau Product Family</h3>
+      <p>Tableau consists of several products that cover the full analytics workflow:</p>
+      <ul>
+        <li><strong>Tableau Desktop</strong> — the primary authoring environment where you build workbooks, charts, and dashboards</li>
+        <li><strong>Tableau Prep Builder</strong> — a dedicated tool for cleaning, shaping, and combining data before analysis (covered in Module 2)</li>
+        <li><strong>Tableau Server / Tableau Cloud</strong> — platforms for publishing, scheduling, and governing dashboards at scale</li>
+        <li><strong>Tableau Public</strong> — a free version for sharing visualisations publicly on the web</li>
+        <li><strong>Tableau Reader</strong> — a free viewer for packaged workbooks shared as <code>.twbx</code> files</li>
+      </ul>
+
+      <div class="diagram">
+        <div class="diagram-title">Tableau in the Data Pipeline</div>
+        <div class="diagram-row">
+          <div class="diagram-box blue">Data Source<br><small>CSV · DB · Cloud</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box accent">Tableau Prep<br><small>Clean &amp; Shape</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box green">Tableau Desktop<br><small>Build &amp; Analyse</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box purple">Tableau Server<br><small>Publish &amp; Share</small></div>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>Tableau is connector-agnostic — it connects to CSVs, Excel files, SQL databases, cloud warehouses (Snowflake, BigQuery, Redshift), and hundreds of other sources without requiring data pre-transformation.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>Which Tableau product is primarily used for cleaning and reshaping data before analysis?</li>
+          <li>What file format does Tableau Desktop use for packaged workbooks that include data?</li>
+          <li>In the Tableau product ecosystem, which component handles governance and sharing at scale?</li>
+        </ul>
+      </div>
+    `
+  },
+
+  // ── SECTION 2 ────────────────────────────────────────────────────────────
+  {
+    id: 2,
+    title: 'The Tableau Desktop Interface',
+    badge: 'foundation',
+    content: `
+      <h3>Navigating the Tableau Desktop Workspace</h3>
+      <p>Tableau Desktop is organised into distinct areas. Understanding what each area does is the first step to working efficiently. When you open a workbook you will see:</p>
+
+      <div class="diagram">
+        <div class="diagram-title">Tableau Desktop — Key Interface Areas</div>
+        <div class="diagram-row">
+          <div class="diagram-box blue">Data Pane<br><small>Fields from your source</small></div>
+          <div class="diagram-box accent">Rows / Columns Shelves<br><small>Defines chart axes</small></div>
+          <div class="diagram-box green">View Canvas<br><small>Where the chart renders</small></div>
+        </div>
+        <div class="diagram-row" style="margin-top:8px;">
+          <div class="diagram-box purple">Marks Card<br><small>Color · Size · Label · Detail</small></div>
+          <div class="diagram-box red">Filters Shelf<br><small>Slice the data</small></div>
+          <div class="diagram-box blue">Show Me Panel<br><small>Chart type picker</small></div>
+        </div>
+      </div>
+
+      <h3>Sheets, Dashboards and Stories</h3>
+      <p>A Tableau workbook is a container with three types of content:</p>
+      <ul>
+        <li><strong>Sheets (Worksheets)</strong> — individual charts or tables. Each sheet connects to one data source.</li>
+        <li><strong>Dashboards</strong> — a canvas that combines multiple sheets and objects (text, images, web pages) into a single interactive view.</li>
+        <li><strong>Stories</strong> — a sequence of sheets or dashboards assembled into a guided narrative. Covered in depth in Module 6 (Story Points).</li>
+      </ul>
+
+      <div class="callout callout-info">
+        <h4>ℹ️ Note</h4>
+        <p>Tabs at the bottom of the window show all your sheets, dashboards, and stories. You can right-click any tab to rename, duplicate, or hide it. Hiding a sheet removes it from the tab bar but keeps it available for use in a dashboard or story.</p>
+      </div>
+
+      <h3>The Pages Shelf</h3>
+      <p>The Pages shelf splits a view into a series of pages based on a field value — for example, one page per month — letting you page through data like a flipbook. It is particularly useful for animation-style presentations.</p>
+
+      <div class="callout callout-warn">
+        <h4>⚠️ Common Pitfall</h4>
+        <p>Beginners often confuse the <strong>Filters shelf</strong> (which removes data from the view) with the <strong>Pages shelf</strong> (which separates data into sequential frames). Only the Filters shelf affects aggregations and totals.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>Which Tableau interface element controls Color, Size, Label, and Tooltip for marks in the view?</li>
+          <li>What is the difference between a Dashboard and a Story in Tableau?</li>
+          <li>If you drag a date field to the Pages shelf, what happens to the view?</li>
+        </ul>
+      </div>
+    `
+  },
+
+  // ── SECTION 3 ────────────────────────────────────────────────────────────
+  {
+    id: 3,
+    title: 'Connecting to Data Sources',
+    badge: 'foundation',
+    content: `
+      <h3>How Tableau Connects to Data</h3>
+      <p>When you open Tableau Desktop, the first screen is the <strong>Start Page</strong> with a Connect panel on the left. Tableau groups connections into three categories:</p>
+
+      <ul>
+        <li><strong>To a File</strong> — Microsoft Excel, Text (CSV/TSV), JSON, PDF, Spatial files, Statistical files</li>
+        <li><strong>To a Server</strong> — cloud databases (Snowflake, BigQuery, Amazon Redshift), on-prem databases (MySQL, PostgreSQL, SQL Server, Oracle), and SaaS apps (Salesforce, Google Analytics)</li>
+        <li><strong>Saved Data Sources</strong> — re-usable <code>.tds</code> or <code>.tdsx</code> connections stored locally or on Tableau Server</li>
+      </ul>
+
+      <div class="diagram">
+        <div class="diagram-title">Connection Types at a Glance</div>
+        <div class="diagram-row">
+          <div class="diagram-box blue">File-Based<br><small>CSV · Excel · JSON</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">+</span>
+          <div class="diagram-box accent">Database<br><small>MySQL · Postgres · SQL Server</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">+</span>
+          <div class="diagram-box green">Cloud / SaaS<br><small>Snowflake · BigQuery · Salesforce</small></div>
+        </div>
+      </div>
+
+      <h3>Live Connection vs Extract (Introduction)</h3>
+      <p>After selecting a data source, Tableau asks how it should access the data:</p>
+      <ul>
+        <li><strong>Live</strong> — every interaction queries the source database in real time. Always shows the latest data but depends on the database being available and responsive.</li>
+        <li><strong>Extract</strong> — Tableau pulls a snapshot of the data and stores it locally in a <code>.hyper</code> file (Tableau's proprietary columnar format). Faster for analysis, works offline, but only as fresh as the last refresh.</li>
+      </ul>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>For this course, you will use CSV files (file-based connection). In Module 3 you will learn how Hyper extracts work under the hood and how to optimise refresh strategies for production workloads.</p>
+      </div>
+
+      <h3>The Data Source Page</h3>
+      <p>Once connected, Tableau shows the <strong>Data Source page</strong> — a canvas where you drag tables, configure joins, and preview your data. From here you can:</p>
+      <ul>
+        <li>Drag multiple tables and configure <strong>joins or unions</strong></li>
+        <li>Hide or rename fields</li>
+        <li>Change data types (e.g., parse a text field as a date)</li>
+        <li>Switch between Live and Extract</li>
+        <li>Click <strong>Sheet 1</strong> at the bottom to begin building visualisations</li>
+      </ul>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>What file extension does Tableau use for its high-performance extract format?</li>
+          <li>In a Live connection, where is the query executed when a user interacts with a dashboard?</li>
+          <li>On the Data Source page, which operation would you use to combine two tables that have the same columns but different rows?</li>
+        </ul>
+      </div>
+    `
+  },
+
+  // ── SECTION 4 ────────────────────────────────────────────────────────────
+  {
+    id: 4,
+    title: 'Dimensions, Measures and Data Types',
+    badge: 'essential',
+    content: `
+      <h3>The Fundamental Split: Dimensions vs Measures</h3>
+      <p>This is the most important concept to internalise in Tableau. Every field in your Data pane is classified as either a <strong>Dimension</strong> or a <strong>Measure</strong>:</p>
+
+      <div class="analogy-box">
+        <h4>🌍 Real-World Analogy</h4>
+        <div class="analogy-row"><strong>Dimension (Blue pill)</strong><span>→</span><span>A label or category — <em>who, what, where</em> — e.g., Region, Category, Customer Name</span></div>
+        <div class="analogy-row"><strong>Measure (Green pill)</strong><span>→</span><span>A number you compute — <em>how much, how many</em> — e.g., Revenue, Profit, Quantity</span></div>
+      </div>
+
+      <h3>Blue Pills vs Green Pills</h3>
+      <p>Tableau colour-codes fields to reflect their role:</p>
+      <ul>
+        <li><span style="color:var(--blue);font-weight:700;">Blue pills</span> are <strong>Discrete</strong> — they produce column/row headers in the view. By default: strings, booleans, and dates used as categories.</li>
+        <li><span style="color:var(--green);font-weight:700;">Green pills</span> are <strong>Continuous</strong> — they produce axes (number lines) in the view. By default: numeric measures and dates used as continuous ranges.</li>
+      </ul>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>You can right-click any pill and toggle it between Discrete and Continuous. A date field used as Discrete produces individual headers (Jan, Feb, Mar); used as Continuous it produces a timeline axis. The visual result is very different.</p>
+      </div>
+
+      <h3>Tableau Data Types</h3>
+      <p>Tableau recognises six data types, each with a distinct icon in the Data pane:</p>
+      <ul>
+        <li><strong>Text (Abc)</strong> — strings: names, categories, IDs</li>
+        <li><strong>Number (#)</strong> — integers and decimals</li>
+        <li><strong>Date (📅)</strong> — date-only values</li>
+        <li><strong>Date &amp; Time (🕐)</strong> — timestamp values</li>
+        <li><strong>Boolean (T|F)</strong> — true/false values</li>
+        <li><strong>Geographic (🌐)</strong> — latitude/longitude or named places Tableau can geocode</li>
+      </ul>
+
+      <h3>Aggregation in Measures</h3>
+      <p>By default, Tableau <strong>aggregates measures</strong> whenever they appear in a view. The default aggregation is SUM, but you can change it to AVG, MIN, MAX, COUNT, COUNTD (count distinct), and more by right-clicking the pill.</p>
+
+      <div class="callout callout-warn">
+        <h4>⚠️ Common Pitfall</h4>
+        <p>A numeric field that acts as a category (e.g., <code>order_id</code>, <code>customer_id</code>) should be moved to the Dimensions area, otherwise Tableau will try to sum it, which is meaningless. Right-click the field → <strong>Convert to Dimension</strong>.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>What is the visual difference between a blue pill and a green pill in Tableau?</li>
+          <li>By default, what aggregation does Tableau apply to a measure when placed in the view?</li>
+          <li>A field called <code>postal_code</code> contains 5-digit numbers. What should you do to prevent Tableau from summing it?</li>
+          <li>What happens to the view when you convert a date field from Discrete to Continuous?</li>
+        </ul>
+      </div>
+    `
+  },
+
+  // ── SECTION 5 ────────────────────────────────────────────────────────────
+  {
+    id: 5,
+    title: 'Building Your First Charts',
+    badge: 'essential',
+    content: `
+      <h3>The Drag-and-Drop Authoring Model</h3>
+      <p>Tableau's core interaction is simple: drag fields from the <strong>Data pane</strong> onto the <strong>Rows</strong> and <strong>Columns shelves</strong>, and Tableau renders a chart. The type of chart depends on the data types you use and how many fields you place on each shelf.</p>
+
+      <div class="diagram">
+        <div class="diagram-title">From Field to Chart</div>
+        <div class="diagram-row">
+          <div class="diagram-box blue">Dimension on Columns<br><small>e.g. Category</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">+</span>
+          <div class="diagram-box green">Measure on Rows<br><small>e.g. SUM(Revenue)</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box accent">Bar Chart<br><small>Automatic</small></div>
+        </div>
+      </div>
+
+      <h3>The Show Me Panel</h3>
+      <p>The <strong>Show Me</strong> panel (top-right) highlights valid chart types based on the fields currently selected in the Data pane. It shows which chart types are available (solid outline) and which require more fields (greyed out). Click a chart type to instantly switch the view.</p>
+
+      <h3>Common Chart Types and When to Use Them</h3>
+      <ul>
+        <li><strong>Bar Chart</strong> — compare values across categories (e.g., revenue by product category)</li>
+        <li><strong>Line Chart</strong> — show trends over time (e.g., monthly sales)</li>
+        <li><strong>Scatter Plot</strong> — explore the relationship between two measures (e.g., profit vs discount)</li>
+        <li><strong>Heat Map</strong> — show magnitude across two dimensions using colour intensity</li>
+        <li><strong>Map</strong> — display geographic data using Tableau's built-in geocoding</li>
+        <li><strong>Treemap</strong> — show part-to-whole relationships with nested rectangles</li>
+        <li><strong>Pie Chart</strong> — show proportions (use sparingly; bar charts are usually clearer)</li>
+      </ul>
+
+      <h3>The Marks Card</h3>
+      <p>The <strong>Marks card</strong> controls the visual properties of data points in the view:</p>
+      <ul>
+        <li><strong>Color</strong> — encode a dimension or measure as colour (e.g., colour bars by region)</li>
+        <li><strong>Size</strong> — encode a measure as the size of marks (useful in scatter plots and bubble charts)</li>
+        <li><strong>Label</strong> — display a field value as a text label on each mark</li>
+        <li><strong>Detail</strong> — add granularity to the view without affecting colour, size, or labels (increases the number of marks)</li>
+        <li><strong>Tooltip</strong> — controls what appears when a user hovers over a mark</li>
+      </ul>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>Adding a dimension to <strong>Color</strong> on the Marks card splits each bar (or mark) into sub-segments by that dimension. This is one of Tableau's most powerful one-click interactions — try dragging <code>category</code> to Color while viewing a bar chart.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>Which Marks card property would you use to add a breakdown by region to an existing bar chart without changing the axis?</li>
+          <li>What does adding a field to the Detail shelf do to the level of granularity in a view?</li>
+          <li>In the Show Me panel, what does a greyed-out chart type indicate?</li>
+        </ul>
+      </div>
+    `
+  },
+
+  // ── SECTION 6 ────────────────────────────────────────────────────────────
+  {
+    id: 6,
+    title: 'Filters, Sorting and Basic Formatting',
+    badge: 'essential',
+    content: `
+      <h3>Filter Types and Order of Operations</h3>
+      <p>Tableau applies filters in a strict sequence. Understanding this order prevents unexpected results when combining multiple filter types:</p>
+
+      <div class="diagram">
+        <div class="diagram-title">Tableau Filter Order of Operations (Top = Applied First)</div>
+        <div class="diagram-row">
+          <div class="diagram-box red">1. Extract Filter<br><small>Limits data in .hyper file</small></div>
+          <span style="font-size:1.2rem;">→</span>
+          <div class="diagram-box accent">2. Data Source Filter<br><small>Limits data sent to Tableau</small></div>
+          <span style="font-size:1.2rem;">→</span>
+          <div class="diagram-box purple">3. Context Filter<br><small>Creates a temporary table</small></div>
+        </div>
+        <div class="diagram-row" style="margin-top:8px;">
+          <div class="diagram-box blue">4. Dimension Filter<br><small>Filters categorical fields</small></div>
+          <span style="font-size:1.2rem;">→</span>
+          <div class="diagram-box green">5. Measure Filter<br><small>Filters aggregated values</small></div>
+          <span style="font-size:1.2rem;">→</span>
+          <div class="diagram-box blue">6. Table Calc Filter<br><small>Filters after calc runs</small></div>
+        </div>
+      </div>
+
+      <h3>Adding Filters to a View</h3>
+      <p>Drag any field from the Data pane to the <strong>Filters shelf</strong>. Tableau opens a filter dialog appropriate for the data type:</p>
+      <ul>
+        <li><strong>Dimension filter</strong> — select which values to include or exclude from a list</li>
+        <li><strong>Measure filter</strong> — set a numeric range (e.g., Revenue &gt; 1000)</li>
+        <li><strong>Date filter</strong> — filter by relative date (last 30 days), specific date range, or individual dates</li>
+      </ul>
+      <p>Right-click any filter on the shelf and select <strong>Show Filter</strong> to expose an interactive filter control to dashboard viewers.</p>
+
+      <h3>Context Filters</h3>
+      <p>A <strong>Context Filter</strong> is a special filter that Tableau processes first, creating a temporary dataset that all other filters and LOD expressions then operate on. Right-click any filter on the Filters shelf → <strong>Add to Context</strong>. Context filters appear in grey on the shelf.</p>
+
+      <div class="callout callout-warn">
+        <h4>⚠️ Common Pitfall</h4>
+        <p>If you use a Top N filter (e.g., top 10 products by revenue) and combine it with a region filter, the Top N is calculated <em>before</em> the region filter — unless the region filter is set as a Context Filter. Without context, you may get fewer than 10 results per region.</p>
+      </div>
+
+      <h3>Sorting</h3>
+      <p>Tableau offers three approaches to sorting:</p>
+      <ul>
+        <li><strong>Quick sort</strong> — click the sort icon on a chart axis to sort ascending or descending</li>
+        <li><strong>Computed sort</strong> — right-click the dimension pill → Sort → sort by a field (e.g., sort categories by SUM(Revenue))</li>
+        <li><strong>Manual sort</strong> — drag individual items in the view to a custom order</li>
+      </ul>
+
+      <h3>Basic Formatting</h3>
+      <p>Access formatting via <strong>Format menu → Workbook / Sheet / Field</strong>. Common tasks:</p>
+      <ul>
+        <li>Format numbers: right-click a measure → Format → Number (currency, percentage, decimal places)</li>
+        <li>Change axis range: right-click an axis → Edit Axis</li>
+        <li>Apply colour palettes: click the Color card → Edit Colors</li>
+        <li>Add reference lines: drag from the Analytics pane → Reference Line</li>
+      </ul>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>In Tableau's filter order of operations, which filter type is applied first?</li>
+          <li>You have a Top 10 products filter and a Region filter. The results show only 7 products. What is the most likely fix?</li>
+          <li>How do you expose a filter control to end users of a published dashboard?</li>
+          <li>What is the difference between a Dimension filter and a Measure filter?</li>
+        </ul>
+      </div>
+    `
+  },
+
+  // ── SECTION 7 ────────────────────────────────────────────────────────────
+  {
+    id: 7,
+    title: '🧪 Lab: Your First Tableau Dashboard with SF Sales Data',
+    badge: 'important',
+    content: `
+      <h3>Lab Overview</h3>
+      <p>In this lab you will connect Tableau Desktop to the SourceFuse sample business datasets, build two core charts, and combine them into a simple interactive dashboard. All subsequent labs in this course build on this foundation.</p>
+
+      <div class="lab-download">
+        <strong>📥 Datasets required for this lab:</strong><br>
+        Download these files from the course dashboard before you begin:<br>
+        <code>sf-sales-orders.csv</code> &nbsp;|&nbsp; <code>sf-customers.csv</code><br>
+        (Files are in the shared <code>/datasets/</code> folder — links on the dashboard page.)
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 1: Connect to sf-sales-orders.csv and Explore the Data</h4>
+        <p>Time: ~10 minutes</p>
+        <ol>
+          <li>Open <strong>Tableau Desktop</strong>. On the Start Page, under <em>Connect → To a File</em>, click <strong>Text File</strong>.</li>
+          <li>Navigate to your downloaded <code>sf-sales-orders.csv</code> and click <strong>Open</strong>.</li>
+          <li>Tableau opens the <strong>Data Source page</strong>. You should see a preview grid with columns including <code>order_id</code>, <code>customer_id</code>, <code>order_date</code>, <code>category</code>, <code>revenue</code>, <code>profit</code>, <code>quantity</code>, and <code>region</code>.</li>
+          <li>Check the data type icon next to <code>order_date</code> — it should be a date (📅). If it shows <strong>Abc</strong>, click the icon and select <strong>Date</strong>.</li>
+          <li>Check that <code>order_id</code> shows a <strong>#</strong> icon. Right-click it → <strong>Convert to Dimension</strong> (it is an identifier, not a number to sum).</li>
+          <li>Click <strong>Sheet 1</strong> at the bottom to open the worksheet.</li>
+          <li>In the Data pane, verify you can see Dimensions (blue) and Measures (green). Confirm <code>revenue</code> and <code>profit</code> appear under Measures.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> Sheet 1 is open with the Data pane showing the sf-sales-orders fields. <code>order_id</code> is a Dimension, <code>order_date</code> is a Date type, and <code>revenue</code> / <code>profit</code> are Measures.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 2: Build a Revenue by Category Bar Chart</h4>
+        <p>Time: ~10 minutes. Prerequisite: Lab 1 complete.</p>
+        <ol>
+          <li>Drag <code>category</code> from the Data pane to the <strong>Columns</strong> shelf.</li>
+          <li>Drag <code>revenue</code> to the <strong>Rows</strong> shelf. Tableau automatically creates a bar chart showing SUM(Revenue) per category.</li>
+          <li>Click the <strong>Sort Descending</strong> button on the vertical axis (the down-arrow icon that appears when you hover over the axis) to sort categories by revenue, highest first.</li>
+          <li>Drag <code>region</code> to the <strong>Color</strong> card on the Marks panel. The bars now split by region using a categorical colour palette.</li>
+          <li>Drag <code>revenue</code> again to the <strong>Label</strong> card. Right-click the pill on the Label card → <strong>Format</strong> → set it to <strong>Currency (Custom)</strong> with 0 decimal places.</li>
+          <li>Double-click the sheet tab at the bottom and rename it <strong>Revenue by Category</strong>.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A sorted stacked bar chart with one bar per category, colour-coded by region, with formatted currency labels on each segment.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 3: Build a Monthly Revenue Trend Line Chart</h4>
+        <p>Time: ~10 minutes. Prerequisite: Lab 1 complete.</p>
+        <ol>
+          <li>Click the <strong>New Worksheet</strong> icon (+ tab at the bottom) to create a second sheet.</li>
+          <li>Drag <code>order_date</code> to the <strong>Columns</strong> shelf. Tableau defaults to YEAR(order_date). Click the pill → select <strong>Month</strong> (the continuous option showing the full date, not just the month name). The pill should turn green.</li>
+          <li>Drag <code>revenue</code> to the <strong>Rows</strong> shelf. A line chart appears showing SUM(Revenue) over time.</li>
+          <li>Drag <code>region</code> to the <strong>Color</strong> card. The line now splits into one line per region.</li>
+          <li>From the <strong>Analytics pane</strong> (tab next to the Data pane), drag <strong>Trend Line</strong> to the view and drop it on <strong>Linear</strong>. A trend line is added per region.</li>
+          <li>Rename this sheet <strong>Monthly Revenue Trend</strong>.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A multi-line chart with one coloured line per region showing monthly revenue, plus a linear trend line per region overlaid.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 4: Combine into a Dashboard</h4>
+        <p>Time: ~10 minutes. Prerequisite: Labs 2 and 3 complete.</p>
+        <ol>
+          <li>Click the <strong>New Dashboard</strong> icon (grid icon in the tab bar) to create a dashboard.</li>
+          <li>In the Dashboard pane on the left, set <strong>Size</strong> to <strong>Automatic</strong> so it adapts to browser width.</li>
+          <li>Drag <strong>Revenue by Category</strong> from the Sheets list onto the dashboard canvas. It fills the space.</li>
+          <li>Drag <strong>Monthly Revenue Trend</strong> below it. Use the blue insertion guide to position it in the bottom half.</li>
+          <li>Click on the <strong>Revenue by Category</strong> chart. In the top-right corner of the chart frame, click the funnel icon (Use as Filter). Now clicking a bar in the top chart filters the trend line below.</li>
+          <li>Add a <strong>Text object</strong> (drag from the Objects panel at the bottom of the Dashboard pane) to the top of the dashboard and type: <strong>SF Sales Performance Dashboard</strong>.</li>
+          <li>Rename the dashboard tab <strong>SF Sales Overview</strong>.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A two-chart dashboard with a title. Clicking any category bar in the top chart filters the trend lines in the bottom chart. This is an Action Filter — the mechanism you will configure in full in Module 6.
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <h4>💡 What's Next</h4>
+        <p>You have just built your first Tableau dashboard. In Module 2 you will learn how to clean and reshape this data using <strong>Tableau Prep Builder</strong> — combining the sales orders with customer data and computing calculated fields — before it reaches Tableau Desktop.</p>
+      </div>
+    `
+  }
+];
+
+
+/* ─────────────────────────────────────────────────────────
+  DO NOT EDIT BELOW THIS LINE
+  (Auth, rendering, Firestore — all generic / reusable)
+───────────────────────────────────────────────────────── */
+
+let _uid       = null;
+let _completed = [];   /* Array of completed section IDs for this module */
+
+/* ── Auth handlers ───────────────────────────────────────── */
+document.getElementById('signin-btn').addEventListener('click', () => {
+  signInWithPopup(auth, new GoogleAuthProvider()).catch(e => {
+    document.getElementById('ep-error').textContent = e.message || 'Sign-in failed.';
+    document.getElementById('ep-error').style.display = 'block';
+  });
+});
+document.getElementById('signout-btn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    if (!user.email || !user.email.endsWith('@sourcefuse.com')) {
+      document.getElementById('ep-error').textContent = 'Only @sourcefuse.com accounts are allowed.';
+      document.getElementById('ep-error').style.display = 'block';
+      await signOut(auth); return;
+    }
+    _uid = user.uid;
+    document.getElementById('user-avatar').src  = user.photoURL || '';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('loading-overlay').style.display = 'flex';
+    await loadCompleted();
+    document.getElementById('loading-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderAll();
+  } else {
+    _uid = null;
+    document.getElementById('app').style.display   = 'none';
+    document.getElementById('auth-overlay').style.display = 'flex';
+  }
+});
+
+/* ── Email sign-in ───────────────────────────────────────── */
+window.sfEmailSignIn = function() {
+  const email = (document.getElementById('ep-email').value || '').trim().toLowerCase();
+  const pwd   =  document.getElementById('ep-password').value || '';
+  const errEl =  document.getElementById('ep-error');
+  errEl.style.display = 'none';
+  if (!email || !pwd)  { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  if (!email.endsWith('@sourcefuse.com')) { errEl.textContent = 'Only @sourcefuse.com accounts are allowed.'; errEl.style.display = 'block'; return; }
+  signInWithEmailAndPassword(auth, email, pwd).catch(e => {
+    errEl.textContent = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') ? 'Incorrect password.'
+      : (e.code === 'auth/user-not-found') ? 'No account found for this email.' : e.message;
+    errEl.style.display = 'block';
+  });
+};
+
+/* ── Firestore: load ─────────────────────────────────────── */
+async function loadCompleted() {
+  const snap = await getDoc(doc(db, 'progress', _uid));
+  _completed = snap.exists() ? (snap.data()[MODULE_KEY] || []) : [];
+}
+
+/* ── Firestore: save (arrayUnion — atomic, no race conditions) */
+async function markComplete(id) {
+  if (!_uid) return;
+  if (_completed.includes(id)) return;
+  _completed = [..._completed, id];
+  const ref = doc(db, 'progress', _uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, { [MODULE_KEY]: _completed, updatedAt: serverTimestamp() });
+  } else {
+    await updateDoc(ref, { [MODULE_KEY]: arrayUnion(id), updatedAt: serverTimestamp() });
+  }
+  updateSectionUI(id);
+  updateSidebarProgress();
+}
+
+/* ── Render all sections ─────────────────────────────────── */
+function renderAll() {
+  renderSections();
+  renderNavItems();
+  updateSidebarProgress();
+}
+
+function renderSections() {
+  const container = document.getElementById('sections-container');
+  container.innerHTML = SECTIONS.map(s => {
+    const done      = _completed.includes(s.id);
+    const badgeHtml = s.badge
+      ? `<span class="nav-badge ${BADGE_CLASSES[s.badge]}">${BADGES[s.badge]}</span>`
+      : '';
+    return `
+      <div class="section-block" id="block-${s.id}">
+        <div class="section-header" onclick="toggleSection(${s.id})">
+          <span class="section-num">${MODULE_NUM}.${s.id}</span>
+          <span class="section-title">${s.title}</span>
+          ${badgeHtml}
+          ${done ? '<span style="color:#43A047;font-size:.85rem;">✓</span>' : ''}
+          <span class="section-toggle" id="toggle-${s.id}">▼</span>
+        </div>
+        <div class="section-body" id="body-${s.id}">
+          ${s.content}
+          <button class="complete-btn ${done ? 'done' : ''}"
+                  id="complete-btn-${s.id}"
+                  onclick="handleMarkComplete(${s.id})"
+                  ${done ? 'disabled' : ''}>
+            ${done ? '✅ Completed' : '✔ Mark as Completed'}
+          </button>
+          <span class="save-indicator" id="indicator-${s.id}"></span>
+        </div>
+      </div>`;
+  }).join('');
+
+  /* Auto-open first incomplete section */
+  const firstIncomplete = SECTIONS.find(s => !_completed.includes(s.id));
+  if (firstIncomplete) toggleSection(firstIncomplete.id);
+  else if (SECTIONS.length > 0) toggleSection(SECTIONS[0].id);
+}
+
+function renderNavItems() {
+  const nav = document.getElementById('nav-items');
+  nav.innerHTML = SECTIONS.map(s => {
+    const done  = _completed.includes(s.id);
+    const badge = s.badge ? `<span class="nav-badge ${BADGE_CLASSES[s.badge]}">${BADGES[s.badge]}</span>` : '';
+    return `<div class="nav-item ${done?'completed':''}" id="nav-${s.id}" onclick="scrollToSection(${s.id})">
+      <span>${MODULE_NUM}.${s.id} ${s.title}</span>${badge}
+    </div>`;
+  }).join('');
+}
+
+function updateSidebarProgress() {
+  const done = _completed.length;
+  const pct  = Math.round((done / SECTIONS.length) * 100);
+  document.getElementById('sidebar-bar').style.width = pct + '%';
+  document.getElementById('sidebar-pct').textContent  = pct + '%';
+}
+
+function updateSectionUI(id) {
+  const btn  = document.getElementById(`complete-btn-${id}`);
+  const nav  = document.getElementById(`nav-${id}`);
+  const blk  = document.getElementById(`block-${id}`);
+  if (btn) { btn.classList.add('done'); btn.disabled = true; btn.textContent = '✅ Completed'; }
+  if (nav) nav.classList.add('completed');
+  /* Add ✓ tick to section header */
+  const hdr  = blk?.querySelector('.section-header');
+  if (hdr && !hdr.querySelector('.done-tick')) {
+    const tick = document.createElement('span');
+    tick.className = 'done-tick';
+    tick.style.cssText = 'color:#43A047;font-size:.85rem;';
+    tick.textContent = '✓';
+    hdr.insertBefore(tick, hdr.querySelector('.section-toggle'));
+  }
+}
+
+/* ── Button click handler ────────────────────────────────── */
+window.handleMarkComplete = async function(id) {
+  const btn = document.getElementById(`complete-btn-${id}`);
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving…';
+  const ind = document.getElementById(`indicator-${id}`);
+  if (ind) ind.textContent = 'Saving…';
+  await markComplete(id);
+  if (ind) { ind.textContent = 'Saved ✓'; setTimeout(() => ind.textContent = '', 2000); }
+};
+
+/* ── Accordion toggle ────────────────────────────────────── */
+window.toggleSection = function(id) {
+  SECTIONS.forEach(s => {
+    const body   = document.getElementById(`body-${s.id}`);
+    const toggle = document.getElementById(`toggle-${s.id}`);
+    const nav    = document.getElementById(`nav-${s.id}`);
+    if (s.id === id) {
+      const isOpen = body.classList.contains('open');
+      body.classList.toggle('open', !isOpen);
+      toggle?.classList.toggle('open', !isOpen);
+      nav?.classList.toggle('active', !isOpen);
+    } else {
+      body.classList.remove('open');
+      toggle?.classList.remove('open');
+      nav?.classList.remove('active');
+    }
+  });
+};
+
+window.scrollToSection = function(id) {
+  toggleSection(id);
+  document.getElementById(`block-${id}`)?.scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+/* Keep this for theme toggle if needed — no-op by default */
+window.toggleTheme = () => {};
+window.markComplete = markComplete;
+</script>
+</body>
+</html>
