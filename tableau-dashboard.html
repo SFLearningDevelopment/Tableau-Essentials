@@ -404,7 +404,7 @@ import { initializeApp }     from 'https://www.gstatic.com/firebasejs/12.10.0/fi
 import { getAuth, GoogleAuthProvider, signInWithPopup,
          signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js';
-import { getFirestore, doc, getDoc }
+import { getFirestore, doc, getDoc, setDoc }
   from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 /* ── Firebase config (update if using a different project) ── */
@@ -486,6 +486,9 @@ async function loadProgress(user) {
   const snap = await getDoc(doc(db, 'progress', user.uid));
   _progress = snap.exists() ? snap.data() : {};
 
+  /* ── tb_examUnlocked: once written, stays true permanently ── */
+  const alreadyUnlocked = _progress.tb_examUnlocked === true;
+
   let totalDone = 0;
   let allComplete = true;
 
@@ -512,15 +515,30 @@ async function loadProgress(user) {
     arc.style.strokeDashoffset = circ - (circ * overall / 100);
     if (overall === 100) arc.style.stroke = '#16a34a';
   }
-  document.getElementById('pct-text').textContent      = overall + '%';
+  document.getElementById('pct-text').textContent       = overall + '%';
   document.getElementById('progress-label').textContent = `${totalDone} of ${TOTAL} sections completed`;
   document.getElementById('stat-done').textContent      = totalDone;
   document.getElementById('stat-rem').textContent       = TOTAL - totalDone;
   document.getElementById('resume-btn').textContent     = totalDone > 0 ? '📖 Resume Learning' : '🚀 Start Learning';
 
-  /* Unlock exam button when all modules complete */
+  /* ── Exam unlock logic ────────────────────────────────────
+     The flag tb_examUnlocked is written to Firestore the first
+     time all modules are complete. On every subsequent load it
+     is read directly — so the exam button stays enabled even
+     if progress data is later partially cleared or re-counted.
+     ────────────────────────────────────────────────────────── */
+  if (allComplete && !alreadyUnlocked) {
+    try {
+      await setDoc(doc(db, 'progress', user.uid),
+        { tb_examUnlocked: true }, { merge: true });
+    } catch(e) {
+      console.warn('Could not write tb_examUnlocked:', e);
+    }
+  }
+
+  const examUnlocked = allComplete || alreadyUnlocked;
   const examBtn = document.getElementById('exam-btn');
-  if (allComplete && examBtn) {
+  if (examUnlocked && examBtn) {
     examBtn.disabled = false;
     examBtn.textContent = '🎯 Take Certification Exam →';
     examBtn.style.cssText += 'background:var(--blue);color:#fff;border-color:var(--blue);';
