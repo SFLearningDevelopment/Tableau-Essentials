@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>Tableau Essentials — Module 5: LOD Expressions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── DESIGN TOKENS ──────────────────────────────────────────── */
+:root{
+  --blue:#1565C0;
+  --blue-dark:#0D47A1;
+  --blue-light:#E3F2FD;
+  --blue-mid:#90CAF9;
+  --navy:#0D47A1;
+  --text:#1a2332;
+  --text2:#4a5568;
+  --text-dim:#4a5568;
+  --text-dimmer:#8fa3bc;
+  --muted:#8fa3bc;
+  --border:#d0dae8;
+  --bg:#0f1117;         /* Dark page background */
+  --bg2:#ffffff;        /* Card / surface background */
+  --bg3:#f0f4f9;        /* Subtle tinted surface */
+  --green:#1a6b3a;
+  --green-light:#e8f5ed;
+  --orange:#92600a;
+  --orange-light:#fff8e6;
+  --coral:#c0392b;
+  --coral-light:#fdf0ee;
+  --purple:#5b4fcf;
+  --purple-light:#f5f0ff;
+  --success:#43A047;    /* GREEN — completed state */
+  --success-dark:#2E7D32;
+  --danger:#DC2626;     /* RED  — "Mark as Completed" default */
+  --danger-dark:#B91C1C;
+  --radius:12px;
+  --shadow:0 4px 12px rgba(15,23,42,.06);
+  --font-sans:'Source Sans 3','Segoe UI',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code','Source Code Pro',Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+a{color:var(--blue);text-decoration:none;}
+a:hover{color:var(--blue-dark);}
+code,pre,.mono{font-family:var(--font-mono);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── AUTH OVERLAY ───────────────────────────────────────────── */
+#auth-overlay,.auth-overlay{position:fixed;inset:0;background:rgba(20,30,50,.85);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:#fff;border-radius:20px;padding:48px 44px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;}
+.auth-card img{height:38px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;}
+.auth-card h2{font-size:1.3rem;font-weight:800;color:#0f172a;margin-bottom:8px;}
+.auth-card p{color:#64748b;font-size:.95rem;line-height:1.6;margin-bottom:24px;}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#2563EB;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:.95rem;font-weight:700;cursor:pointer;width:100%;transition:all .2s;box-shadow:0 2px 8px rgba(37,99,235,.35);}
+.google-btn:hover{background:#1D4ED8;transform:translateY(-1px);}
+.auth-divider{margin:16px 0 14px;color:#9ca3af;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;}
+.auth-input{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:11px 13px;font-size:.9rem;margin-bottom:8px;outline:none;font-family:var(--font-sans);color:#111827;background:#fff;display:block;box-sizing:border-box;}
+.auth-input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.email-signin-btn{width:100%;background:#2563EB;color:#fff;border:none;border-radius:12px;padding:13px;font-size:.92rem;font-weight:700;cursor:pointer;margin-top:4px;transition:all .2s;}
+.email-signin-btn:hover{background:#1D4ED8;transform:translateY(-1px);}
+#ep-error{display:none;font-size:.82rem;color:#dc2626;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:8px 12px;margin-top:4px;}
+
+/* ── LOADING ────────────────────────────────────────────────── */
+#loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:none;align-items:center;justify-content:center;}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+
+/* ── HEADER / NAV ───────────────────────────────────────────── */
+.header{background:#1565C0;border-bottom:none;padding:13px 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.35);}
+.header-left{display:flex;align-items:center;gap:10px;font-size:.88rem;color:rgba(255,255,255,.8);}
+.header-left img{height:28px;}
+.header-left a{color:#fff;font-weight:600;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.user-chip{display:flex;align-items:center;gap:7px;font-size:.82rem;color:#fff;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:4px 12px 4px 4px;}
+.user-chip img{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.5);}
+.btn-sm{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:7px;cursor:pointer;font-size:.8rem;transition:all .15s;font-family:var(--font-sans);}
+.btn-sm:hover{background:rgba(255,255,255,.25);}
+
+/* ── LAYOUT ─────────────────────────────────────────────────── */
+.layout{display:flex;min-height:calc(100vh - 54px);}
+
+/* ── SIDEBAR ────────────────────────────────────────────────── */
+.sidebar{width:275px;background:var(--bg2);border-right:1px solid var(--border);padding:18px 0;overflow-y:auto;position:sticky;top:54px;height:calc(100vh - 54px);flex-shrink:0;}
+.sidebar-title{padding:0 18px 10px;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dimmer);font-family:var(--font-mono);border-bottom:1px solid var(--border);margin-bottom:8px;}
+.sidebar-progress{padding:10px 18px;background:var(--bg3);margin:0 10px 10px;border-radius:8px;}
+.sidebar-progress-bar{background:var(--border);border-radius:99px;height:4px;margin-top:5px;overflow:hidden;}
+.sidebar-progress-fill{height:100%;border-radius:99px;background:var(--success);transition:width .3s;}
+.nav-item{padding:9px 18px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;display:flex;align-items:center;gap:9px;font-size:.85rem;color:var(--text);}
+.nav-item:hover{background:var(--bg3);}
+.nav-item.active{border-left-color:var(--blue);background:var(--blue-light);color:var(--blue);font-weight:600;}
+.nav-item.completed{color:var(--success);}
+.nav-badge{font-size:.63rem;padding:2px 6px;border-radius:3px;font-weight:700;font-family:var(--font-mono);}
+.badge-foundation{background:var(--green-light);color:var(--green);}
+.badge-essential{background:var(--blue-light);color:var(--blue);}
+.badge-important{background:var(--orange-light);color:var(--orange);}
+.nav-footer{padding:14px 18px;border-top:1px solid var(--border);margin-top:auto;font-size:.78rem;color:var(--text-dimmer);}
+.nav-btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-family:var(--font-mono);color:var(--blue);text-decoration:none;padding:10px 18px;border:1px solid var(--blue-mid);border-radius:8px;background:var(--blue-light);font-weight:600;cursor:pointer;}
+.nav-btn:hover{background:var(--blue-mid);}
+.nav-btn.secondary{background:var(--bg2);color:var(--text-dim);border-color:var(--border);}
+
+/* ── MAIN CONTENT ───────────────────────────────────────────── */
+.content{flex:1;padding:30px 38px;max-width:840px;}
+.module-hero{margin-bottom:28px;}
+.module-hero h1{font-size:1.9rem;font-weight:800;margin-bottom:7px;color:var(--text);}
+.module-hero p{color:var(--text-dim);font-size:.97rem;}
+.module-meta{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.meta-chip{font-size:.76rem;padding:4px 10px;border-radius:6px;font-weight:600;}
+.chip-weight{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);}
+.chip-sections{background:var(--green-light);color:var(--green);border:1px solid #a3d4b8;}
+
+/* ── SECTION ACCORDION ──────────────────────────────────────── */
+.section-block{margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg2);}
+.section-header{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg2);user-select:none;transition:background .12s;}
+.section-header:hover{background:var(--bg3);}
+.section-num{font-family:var(--font-mono);font-weight:700;color:var(--blue);font-size:.9rem;min-width:28px;}
+.section-title{flex:1;font-size:1rem;font-weight:600;color:var(--text);}
+.section-toggle{color:var(--text-dimmer);font-size:.85rem;transition:transform .2s;}
+.section-toggle.open{transform:rotate(180deg);}
+.section-body{display:none;padding:18px 22px 14px;border-top:1px solid var(--border);font-size:.93rem;color:var(--text-dim);line-height:1.75;}
+.section-body.open{display:block;}
+.section-body h3{color:var(--text);font-size:1.05rem;margin:16px 0 8px;font-weight:700;}
+.section-body h3:first-child{margin-top:0;}
+.section-body h4{color:var(--text);font-size:.95rem;margin:12px 0 6px;font-weight:600;}
+.section-body p{margin-bottom:10px;}
+.section-body ul,.section-body ol{margin:8px 0 10px 20px;}
+.section-body li{margin-bottom:4px;}
+.section-body code{font-family:var(--font-mono);font-size:.83rem;background:var(--bg3);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:#0f4a7a;}
+.section-body pre{background:#1e2433;color:#cdd6f4;padding:16px;border-radius:8px;font-size:.83rem;font-family:var(--font-mono);overflow-x:auto;margin:12px 0;position:relative;}
+
+/* ── CALLOUT BOXES ──────────────────────────────────────────── */
+.callout{border-left:4px solid var(--blue);background:var(--blue-light);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;}
+.callout h4{color:var(--blue);font-size:.9rem;margin-bottom:6px;font-weight:700;}
+.callout-tip{border-left-color:var(--green);background:var(--green-light);}
+.callout-tip h4{color:var(--green);}
+.callout-warn{border-left-color:#92600a;background:var(--orange-light);}
+.callout-warn h4{color:#92600a;}
+.callout-info{border-left-color:var(--blue);background:var(--blue-light);}
+.callout-info h4{color:var(--blue);}
+
+/* ── ANALOGY BOXES ──────────────────────────────────────────── */
+.analogy-box{background:var(--blue-light);border-radius:8px;padding:14px 18px;margin:12px 0;}
+.analogy-box h4{margin-bottom:10px;color:var(--blue);font-size:.93rem;font-weight:700;}
+.analogy-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:.88rem;}
+.analogy-row strong{color:var(--text);min-width:120px;}
+
+/* ── DIAGRAMS ────────────────────────────────────────────────── */
+.diagram{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:18px;margin:14px 0;text-align:center;}
+.diagram-title{font-size:.7rem;color:var(--text-dimmer);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:12px;letter-spacing:.06em;font-weight:600;}
+.diagram-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:8px 0;}
+.diagram-box{padding:8px 14px;border-radius:6px;font-size:.83rem;font-weight:600;font-family:var(--font-mono);}
+.diagram-box.blue{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);}
+.diagram-box.accent{background:var(--blue);color:#fff;}
+.diagram-box.green{background:var(--green-light);color:var(--green);border:1px solid #a3d4b8;}
+.diagram-box.purple{background:var(--purple-light);color:var(--purple);border:1px solid #c4bdf0;}
+.diagram-box.red{background:var(--coral-light);color:var(--coral);border:1px solid #f0b8b2;}
+
+/* ── TEST QUESTIONS ─────────────────────────────────────────── */
+.test-questions{background:var(--orange-light);border:1px solid #f0d4a0;border-radius:8px;padding:14px 18px;margin:14px 0;}
+.test-questions h4{color:#92600a;margin-bottom:8px;font-weight:700;font-size:.93rem;}
+.test-questions ul{margin-left:18px;}
+.test-questions li{color:var(--text-dim);font-size:.88rem;}
+
+/* ── COMPLETE BUTTON ─────────────────────────────────────────
+   DEFAULT (not done): RED  → "I still need to mark this"
+   DONE state:         GREEN → "Section completed ✓"
+   ─────────────────────────────────────────────────────────── */
+.complete-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--danger);    /* RED by default */
+  color:#fff;border:none;border-radius:8px;
+  padding:10px 24px;font-size:.95rem;font-weight:700;
+  cursor:pointer;margin-top:16px;
+  transition:background .2s,transform .1s;
+  font-family:var(--font-sans);
+}
+.complete-btn:hover:not(:disabled){
+  background:var(--danger-dark);
+  transform:translateY(-1px);
+}
+.complete-btn.done{
+  background:var(--success);   /* GREEN when completed */
+  cursor:not-allowed;
+}
+.complete-btn:disabled{cursor:not-allowed;}
+.save-indicator{font-size:.75rem;color:var(--text-dimmer);font-family:var(--font-mono);margin-left:8px;}
+/* ── LAB BLOCKS ─────────────────────────────────────────────── */
+.lab{background:#f0f4f9;border:1px solid #d0dae8;border-left:4px solid var(--blue);border-radius:8px;padding:18px 22px;margin:16px 0;}
+.lab h4{color:var(--blue);font-size:.95rem;margin-bottom:4px;font-weight:700;}
+.lab p{margin:4px 0 10px;color:var(--text2);font-size:.88rem;}
+.lab ol{margin:10px 0 10px 18px;}
+.lab li{margin-bottom:7px;font-size:.9rem;line-height:1.6;}
+.lab code{font-family:var(--font-mono);font-size:.82rem;background:#e8f0fe;border:1px solid #c5d5f5;padding:1px 5px;border-radius:4px;color:#1a4fa0;}
+.lab-expected{background:#e8f5ed;border:1px solid #a3d4b8;border-radius:6px;padding:10px 14px;margin-top:12px;font-size:.88rem;color:var(--green);}
+.lab-expected strong{color:var(--green);}
+.lab-download{background:var(--orange-light);border:1px solid #f0d4a0;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:.88rem;color:var(--orange);}
+.lab-download strong{color:var(--orange);}
+
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH OVERLAY ═══════════════════════════════════════════ -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <img src="https://sflearningdevelopment.github.io/sf-internal-kubernetes-certification/sourcefuse-logo.png" alt="SourceFuse"/>
+    <h2>Sign In Required</h2>
+    <p>Sign in with your SourceFuse Google account to access this module.</p>
+    <button class="google-btn" id="signin-btn">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+      Sign in with Google
+    </button>
+    <div class="auth-divider">OR</div>
+    <input id="ep-email" type="email" placeholder="you@sourcefuse.com" autocomplete="email" class="auth-input">
+    <input id="ep-password" type="password" placeholder="Password" autocomplete="current-password" class="auth-input">
+    <button onclick="sfEmailSignIn()" class="email-signin-btn">Sign in with Email</button>
+    <div id="ep-error"></div>
+  </div>
+</div>
+
+<div id="loading-overlay"><div class="spinner"></div></div>
+
+<div id="app" style="display:none;">
+
+<!-- ══ HEADER ════════════════════════════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <img src="https://sflearningdevelopment.github.io/sf-internal-kubernetes-certification/sourcefuse-logo.png" alt="SourceFuse"/>
+    <a href="tableau-dashboard.html?v=2026-06-01-v1">← Dashboard</a> / Module 5
+  </div>
+  <div class="header-right">
+    <div class="user-chip">
+      <img id="user-avatar" src="" alt=""/>
+      <span id="user-name" style="font-size:.82rem;"></span>
+    </div>
+    <button class="btn-sm" id="signout-btn">Sign Out</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+  <nav class="sidebar">
+    <div class="sidebar-title">Module 5 — 8 Sections</div>
+    <div class="sidebar-progress">
+      <div style="font-size:.78rem;color:var(--text2);display:flex;justify-content:space-between;">
+        <span>Progress</span><span id="sidebar-pct">0%</span>
+      </div>
+      <div class="sidebar-progress-bar">
+        <div class="sidebar-progress-fill" id="sidebar-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="nav-items"></div><!-- Dynamically populated by JS -->
+    <div class="nav-footer">
+      <a href="tableau-dashboard.html?v=2026-06-01-v1" class="nav-btn secondary">← Dashboard</a>
+      <a href="tableau-module-6.html?v=2026-06-01-v1" class="nav-btn">Module 6: Story Points &amp; Action Filters →</a>
+    </div>
+  </nav>
+
+  <!-- ══ MAIN CONTENT ════════════════════════════════════════ -->
+  <div class="content">
+    <div class="module-hero">
+      <h1>🔬 Module 5: LOD Expressions</h1>
+      <p>Master Tableau's most powerful calculation feature — Level of Detail (LOD) expressions — to compute aggregations at any grain, independent of the current view.</p>
+      <div class="module-meta">
+        <span class="meta-chip chip-weight">20% Exam Weight</span>
+        <span class="meta-chip chip-sections">8 Sections</span>
+      </div>
+    </div>
+    <div id="sections-container"></div><!-- Dynamically populated by JS -->
+  </div>
+
+</div><!-- .layout -->
+</div><!-- #app -->
+
+<!-- ══════════════════════════════════════════════════════════
+  FIREBASE + CONTENT
+══════════════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }       from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup,
+         signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+/* ── Firebase config ─────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyC-I-IOCq2fCwa471fsD5xOn6SYQSBDp7Q",
+  authDomain:        "sfcertification-grafana.firebaseapp.com",
+  projectId:         "sfcertification-grafana",
+  storageBucket:     "sfcertification-grafana.firebasestorage.app",
+  messagingSenderId: "227322696511",
+  appId:             "1:227322696511:web:12e7ced7dd3d45fa06798a"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ── Module identity ─────────────────────────────────────── */
+const MODULE_KEY = 'tb5'; // e.g. 'm1', 'pm1', 'k8s_m1'
+const MODULE_NUM = 5;             // integer
+
+/* ── Section difficulty badge labels ────────────────────── */
+const BADGES       = { foundation:'Foundation', essential:'Essential', important:'Important' };
+const BADGE_CLASSES= { foundation:'badge-foundation', essential:'badge-essential', important:'badge-important' };
+
+/* ════════════════════════════════════════════════════════════
+  SECTIONS ARRAY — replace with your course content
+  Each section:
+    id:      unique integer (1-based within this module)
+    title:   section heading shown in sidebar + accordion
+    badge:   'foundation' | 'essential' | 'important'
+    content: HTML string for the section body
+             Use the helper elements in CSS:
+             .callout .callout-tip .callout-warn .callout-info
+             .analogy-box .analogy-row
+             .diagram .diagram-row .diagram-box
+             .test-questions
+════════════════════════════════════════════════════════════ */
+const SECTIONS = [
+  {
+    id: 1,
+    title: 'Why LOD Expressions Exist',
+    badge: 'foundation',
+    content: `
+      <h3>The Aggregation Problem</h3>
+      <p>In Tableau, every measure is aggregated to match the dimensions currently in the view. If you have <code>Category</code> and <code>Region</code> on the view, SUM(Revenue) is computed per Category per Region. But what if you need a metric at a <em>different</em> level of detail — for example, the average revenue per customer, shown alongside per-category totals?</p>
+      <p>Without LOD expressions, this requires blending, table calculations, or re-modelling the data. <strong>Level of Detail (LOD) expressions</strong> solve this elegantly by letting you specify exactly which dimensions to use in an aggregation — regardless of what is in the view.</p>
+
+      <div class="analogy-box">
+        <h4>🌍 Real-World Analogy</h4>
+        <div class="analogy-row"><strong>Tableau view</strong><span>→</span><span>A camera — you choose the zoom level (dimensions in the view)</span></div>
+        <div class="analogy-row"><strong>LOD expression</strong><span>→</span><span>A second camera locked to a specific zoom level — it shows its own picture regardless of the first camera's zoom</span></div>
+        <div class="analogy-row"><strong>FIXED LOD</strong><span>→</span><span>The second camera ignores the first camera entirely</span></div>
+        <div class="analogy-row"><strong>INCLUDE/EXCLUDE LOD</strong><span>→</span><span>The second camera adjusts relative to the first camera's zoom</span></div>
+      </div>
+
+      <h3>The Three LOD Types</h3>
+      <div class="diagram">
+        <div class="diagram-title">LOD Expression Types</div>
+        <div class="diagram-row">
+          <div class="diagram-box red">FIXED<br><small>Ignores view dimensions</small></div>
+          <div class="diagram-box blue">INCLUDE<br><small>Adds to view dimensions</small></div>
+          <div class="diagram-box green">EXCLUDE<br><small>Removes from view dimensions</small></div>
+        </div>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>What problem do LOD expressions solve that standard aggregations in Tableau cannot address?</li>
+          <li>Name the three types of LOD expressions in Tableau.</li>
+          <li>If SUM(Revenue) is in a view with Category and Region, at what level of detail is it computed?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 2,
+    title: 'FIXED LOD — Computing at a Specified Level',
+    badge: 'foundation',
+    content: `
+      <h3>FIXED LOD Syntax</h3>
+      <p>A FIXED LOD expression computes an aggregation at the dimension(s) you specify, <strong>completely independently of what is in the current view</strong>:</p>
+      <pre>{ FIXED [Dimension1], [Dimension2] : AGG([Measure]) }</pre>
+      <p>Examples:</p>
+      <pre>// Total revenue per customer — fixed at customer level
+{ FIXED [customer_id] : SUM([revenue]) }
+
+// First order date per customer — for cohort analysis
+{ FIXED [customer_id] : MIN([order_date]) }
+
+// Revenue per region regardless of view filters
+{ FIXED [region] : SUM([revenue]) }</pre>
+
+      <h3>FIXED and Filters</h3>
+      <p>This is the most important rule about FIXED LOD expressions: they are computed <strong>before Dimension filters</strong> in Tableau's filter order of operations. This means a Dimension filter on the view does NOT affect a FIXED calculation — the FIXED result is the same whether you filter to one region or show all regions.</p>
+
+      <div class="callout callout-warn">
+        <h4>⚠️ Common Pitfall — FIXED ignores Dimension filters</h4>
+        <p>If you create a FIXED LOD to compute per-customer revenue and then filter the view to "Region: West", the FIXED calculation still uses ALL regions' data. To make FIXED respect a filter, promote that filter to a <strong>Context Filter</strong> (right-click it on the Filters shelf → Add to Context).</p>
+      </div>
+
+      <h3>Common Use Cases for FIXED</h3>
+      <ul>
+        <li><strong>Customer cohort analysis</strong> — first purchase date, first product category</li>
+        <li><strong>% of grand total</strong> — divide row-level revenue by the FIXED total</li>
+        <li><strong>Benchmarking</strong> — compare each region's revenue to the company-wide total</li>
+        <li><strong>Rank ignoring view filters</strong> — rank all customers globally, not just those visible</li>
+      </ul>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>Write a FIXED LOD that computes the total revenue per region.</li>
+          <li>A FIXED LOD is not responding to a dimension filter on the view. What must you do to make it filter-aware?</li>
+          <li>Does a FIXED LOD expression respond to Extract Filters? Why?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 3,
+    title: 'INCLUDE LOD — Adding Granularity',
+    badge: 'essential',
+    content: `
+      <h3>INCLUDE LOD Syntax</h3>
+      <p>An INCLUDE LOD adds dimensions to the current view level of detail when computing the aggregation. The result is then typically re-aggregated for display in the view.</p>
+      <pre>{ INCLUDE [Dimension] : AGG([Measure]) }</pre>
+
+      <h3>When to Use INCLUDE</h3>
+      <p>Use INCLUDE when you need an aggregation at a <em>finer</em> grain than the view, and then want to summarise that finer-grain result for display. The classic example: <strong>average orders per customer, shown at the region level.</strong></p>
+      <pre>// Step 1: compute order count per customer (INCLUDE adds customer_id to the view)
+{ INCLUDE [customer_id] : COUNT([order_id]) }
+
+// Step 2: wrap in AVG to get average per customer, aggregated to whatever the view shows
+AVG({ INCLUDE [customer_id] : COUNT([order_id]) })</pre>
+
+      <div class="diagram">
+        <div class="diagram-title">INCLUDE — How It Works</div>
+        <div class="diagram-row">
+          <div class="diagram-box blue">View level: Region<br><small>3 rows (East, West, Central)</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">+</span>
+          <div class="diagram-box accent">INCLUDE customer_id<br><small>Compute at Region + Customer</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box green">AVG back to Region<br><small>Avg orders per customer per region</small></div>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>INCLUDE LODs <em>do</em> respect Dimension filters — unlike FIXED. If you filter to Region = West, the INCLUDE calculation only considers customers in the West region. This makes INCLUDE well-suited for filter-aware per-member metrics.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>What does an INCLUDE LOD expression add to the computation compared to a standard aggregation?</li>
+          <li>Write an INCLUDE LOD that computes the number of unique orders per customer.</li>
+          <li>Does an INCLUDE LOD respect dimension filters on the view? How does this differ from FIXED?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 4,
+    title: 'EXCLUDE LOD — Removing Granularity',
+    badge: 'essential',
+    content: `
+      <h3>EXCLUDE LOD Syntax</h3>
+      <p>An EXCLUDE LOD removes one or more dimensions from the current view level of detail when computing the aggregation:</p>
+      <pre>{ EXCLUDE [Dimension] : AGG([Measure]) }</pre>
+
+      <h3>When to Use EXCLUDE</h3>
+      <p>Use EXCLUDE when the view is more granular than you want for a specific calculation. The most common use case: <strong>computing a percentage of total or a difference from overall average</strong>, where you need the total across all members of a dimension that is currently in the view.</p>
+      <pre>// View has Category. Compute total revenue EXCLUDING Category (= grand total)
+{ EXCLUDE [category] : SUM([revenue]) }
+
+// Use it to compute % of total:
+SUM([revenue]) / { EXCLUDE [category] : SUM([revenue]) }</pre>
+
+      <div class="diagram">
+        <div class="diagram-title">EXCLUDE — Removing a Dimension from the Computation</div>
+        <div class="diagram-row">
+          <div class="diagram-box blue">View: Category + Region<br><small>SUM(revenue) = per cell</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box accent">EXCLUDE [category]<br><small>SUM(revenue) = per Region only</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box green">Result: % share<br><small>Cell / Region total</small></div>
+        </div>
+      </div>
+
+      <div class="callout callout-warn">
+        <h4>⚠️ Common Pitfall</h4>
+        <p>EXCLUDE can only remove dimensions that are already in the current view level of detail. If you try to EXCLUDE a dimension that is not in the view, Tableau ignores the EXCLUDE clause — the expression behaves like a standard aggregation. Always confirm the target dimension is actually in the view before using EXCLUDE.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>Write an EXCLUDE LOD to compute total revenue across all categories, for use in a % of total calculation.</li>
+          <li>What happens if you write <code>{EXCLUDE [region] : SUM([revenue])}</code> but [region] is not in the current view?</li>
+          <li>Which LOD type would you use to show each category's revenue as a percentage of the overall total?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 5,
+    title: 'Nested LOD Expressions',
+    badge: 'essential',
+    content: `
+      <h3>What is a Nested LOD?</h3>
+      <p>A <strong>nested LOD</strong> is an LOD expression that references another LOD expression. This allows multi-step aggregation logic that would otherwise require multiple data source joins or blending.</p>
+
+      <h3>Example: Maximum of Per-Customer Average Order Value</h3>
+      <pre>// Step 1: average order value per customer
+{ FIXED [customer_id] : AVG([revenue]) }
+
+// Step 2: the maximum of those per-customer averages
+{ FIXED : MAX( { FIXED [customer_id] : AVG([revenue]) } ) }
+
+// This gives a single number: the highest avg order value across all customers</pre>
+
+      <h3>Example: Cohort Revenue — Revenue from Customers Who First Bought in 2024</h3>
+      <pre>// Step 1: first purchase year per customer
+{ FIXED [customer_id] : MIN(YEAR([order_date])) }
+
+// Step 2: use that as a cohort label in a calculation
+IF { FIXED [customer_id] : MIN(YEAR([order_date])) } = 2024
+  THEN [revenue]
+  ELSE 0
+END
+
+// Step 3: wrap in SUM to get cohort revenue per period
+SUM(
+  IF { FIXED [customer_id] : MIN(YEAR([order_date])) } = 2024
+  THEN [revenue] ELSE 0 END
+)</pre>
+
+      <div class="callout callout-warn">
+        <h4>⚠️ Common Pitfall</h4>
+        <p>Nested LODs can be slow on large datasets because each LOD requires a separate aggregation pass over the data. If performance is a concern, consider materialising the inner LOD result as a calculated field at the Extract or Prep level rather than computing it live in every view interaction.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>Can a Tableau LOD expression reference another LOD expression? What is this called?</li>
+          <li>Write a nested LOD to compute the minimum of per-region average revenue.</li>
+          <li>What performance consideration applies when using nested LOD expressions on large datasets?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 6,
+    title: 'LOD Expressions and Filters',
+    badge: 'essential',
+    content: `
+      <h3>How Filters Interact with LOD Expressions</h3>
+      <p>Understanding filter-LOD interaction is critical for correct results. The rule depends on the LOD type:</p>
+
+      <div class="diagram">
+        <div class="diagram-title">Filter Order of Operations with LODs</div>
+        <div class="diagram-row" style="flex-direction:column;gap:6px;text-align:left;padding:0 16px;">
+          <div style="font-size:.83rem;padding:5px 8px;background:var(--coral-light);border-radius:4px;"><strong>1. Extract Filters</strong> — affect ALL LOD types (data excluded here never enters Tableau)</div>
+          <div style="font-size:.83rem;padding:5px 8px;background:var(--orange-light);border-radius:4px;"><strong>2. Data Source Filters</strong> — affect ALL LOD types</div>
+          <div style="font-size:.83rem;padding:5px 8px;background:var(--purple-light);border-radius:4px;"><strong>3. Context Filters</strong> — affect FIXED, INCLUDE, and EXCLUDE LODs</div>
+          <div style="font-size:.83rem;padding:5px 8px;background:var(--blue-light);border-radius:4px;"><strong>4. FIXED LODs are computed here</strong> — after context filters, before dimension filters</div>
+          <div style="font-size:.83rem;padding:5px 8px;background:var(--green-light);border-radius:4px;"><strong>5. Dimension Filters</strong> — affect INCLUDE and EXCLUDE LODs but NOT FIXED</div>
+          <div style="font-size:.83rem;padding:5px 8px;background:var(--blue-light);border-radius:4px;"><strong>6. INCLUDE / EXCLUDE LODs are computed here</strong></div>
+          <div style="font-size:.83rem;padding:5px 8px;background:var(--orange-light);border-radius:4px;"><strong>7. Measure Filters → Table Calculation Filters</strong> — after all LODs</div>
+        </div>
+      </div>
+
+      <h3>Practical Rules</h3>
+      <ul>
+        <li><strong>FIXED ignores Dimension filters</strong> — promote the filter to Context to fix this</li>
+        <li><strong>INCLUDE and EXCLUDE respect Dimension filters</strong> — they behave as expected for filter-aware per-member metrics</li>
+        <li><strong>All LODs respect Extract and Data Source filters</strong> — data excluded at these levels is invisible to LODs</li>
+        <li><strong>All LODs respect Context filters</strong> — Context is the universal override</li>
+      </ul>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>The Context Filter trick: if you need a FIXED LOD to respond to a user-facing filter (e.g., a date range filter), right-click that filter on the Filters shelf → <strong>Add to Context</strong>. The FIXED LOD will then be computed within the context — i.e., only over the filtered data.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>A FIXED LOD is showing the wrong result when a user applies a Region filter. What is the fix?</li>
+          <li>Which filter types affect all three LOD expression types (FIXED, INCLUDE, EXCLUDE)?</li>
+          <li>At what point in Tableau's filter order of operations is a FIXED LOD computed?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 7,
+    title: 'Common LOD Patterns and Use Cases',
+    badge: 'important',
+    content: `
+      <h3>Pattern Library</h3>
+      <p>These are the LOD patterns most commonly tested in Tableau certifications and most frequently needed in real workbooks. Study each carefully.</p>
+
+      <h3>1. Percentage of Total</h3>
+      <pre>SUM([revenue]) / { EXCLUDE [category] : SUM([revenue]) }</pre>
+      <p>Shows each category's revenue as a % of the overall (EXCLUDE removes the category from the denominator).</p>
+
+      <h3>2. Customer First Purchase Date (Cohort Anchor)</h3>
+      <pre>{ FIXED [customer_id] : MIN([order_date]) }</pre>
+      <p>Returns the first ever order date for each customer — the foundation for cohort analysis.</p>
+
+      <h3>3. Days Since First Purchase</h3>
+      <pre>DATEDIFF('day',
+  { FIXED [customer_id] : MIN([order_date]) },
+  [order_date]
+)</pre>
+      <p>Returns how many days after their first order each subsequent order was placed.</p>
+
+      <h3>4. Average Orders Per Customer (at Region Level)</h3>
+      <pre>AVG({ INCLUDE [customer_id] : COUNT([order_id]) })</pre>
+      <p>With Region in the view, returns the average number of orders per customer within each region.</p>
+
+      <h3>5. Running Distinct Customer Count</h3>
+      <pre>{ FIXED [order_date] : COUNTD([customer_id]) }</pre>
+      <p>Number of unique customers per day — useful for daily active user (DAU) style metrics.</p>
+
+      <h3>6. Revenue vs Company Benchmark</h3>
+      <pre>SUM([revenue]) - { FIXED : AVG([revenue]) }</pre>
+      <p>How much each dimension member's revenue deviates from the company-wide average.</p>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>The outer aggregation wrapping an LOD (like <code>AVG({INCLUDE...})</code>) controls what is shown <em>in the view</em>. The inner LOD controls the grain of the inner calculation. Understanding this two-level aggregation model is the key to writing correct LOD expressions.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>Which LOD type is most appropriate for computing a percentage of grand total?</li>
+          <li>Write an LOD to find the first order date for each customer.</li>
+          <li>You need the average number of orders per customer, shown by region. Which LOD type do you use, and why?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 8,
+    title: '🧪 Lab: LOD Expressions with SF Sales Data',
+    badge: 'important',
+    content: `
+      <h3>Lab Overview</h3>
+      <p>In this lab you will write and test FIXED, INCLUDE, and EXCLUDE LOD expressions using the SF sales dataset — building calculated fields for cohort analysis, percentage of total, and per-customer metrics.</p>
+
+      <div class="lab-download">
+        <strong>📥 Dataset required:</strong><br>
+        Connect to <code>sf-sales-prepared.hyper</code> (from Module 2 lab) — this includes both orders and customer data. Or connect to <code>sf-sales-orders.csv</code> directly.
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 1: FIXED — Customer Lifetime Revenue</h4>
+        <p>Time: ~10 minutes</p>
+        <ol>
+          <li>Open Tableau Desktop and connect to your dataset.</li>
+          <li>Create a new calculated field named <strong>Customer Lifetime Revenue</strong>:<br>
+            <code>{ FIXED [customer_id] : SUM([revenue]) }</code>
+          </li>
+          <li>Create a bar chart: drag <code>customer_id</code> to Rows, <code>Customer Lifetime Revenue</code> to Columns. Sort descending.</li>
+          <li>Now add a <strong>Region</strong> filter to the Filters shelf — filter to one region only.</li>
+          <li>Notice the bar lengths do NOT change — the FIXED LOD ignores the dimension filter.</li>
+          <li>Right-click the Region filter → <strong>Add to Context</strong>. The bars now update to show only that region's revenue. This confirms FIXED responds to Context Filters.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> Without context, the FIXED LOD returns company-wide lifetime revenue per customer regardless of the region filter. With the filter promoted to Context, it shows region-specific lifetime revenue.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 2: EXCLUDE — Revenue as % of Category Total</h4>
+        <p>Time: ~10 minutes. Prerequisite: Lab 1 complete.</p>
+        <ol>
+          <li>Create a calculated field named <strong>% of Category Total</strong>:<br>
+            <code>SUM([revenue]) / { EXCLUDE [region] : SUM([revenue]) }</code>
+          </li>
+          <li>Build a heatmap: drag <code>category</code> to Rows, <code>region</code> to Columns.</li>
+          <li>Drag <strong>% of Category Total</strong> to the Color card. Format it as Percentage (1 decimal).</li>
+          <li>The colour now shows each region's share of its category's total revenue. Each row (category) should sum to 100%.</li>
+          <li>Add <code>% of Category Total</code> to the Label card as well to show the numbers.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A heatmap where each cell shows a region's % contribution to its category. Each row of percentages sums to 100%, confirming the EXCLUDE removes [region] from the denominator correctly.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 3: INCLUDE — Average Orders Per Customer by Region</h4>
+        <p>Time: ~10 minutes. Prerequisite: Lab 1 complete.</p>
+        <ol>
+          <li>Create a calculated field named <strong>Avg Orders Per Customer</strong>:<br>
+            <code>AVG({ INCLUDE [customer_id] : COUNT([order_id]) })</code>
+          </li>
+          <li>Build a bar chart: drag <code>region</code> to Columns, <strong>Avg Orders Per Customer</strong> to Rows.</li>
+          <li>Add <code>region</code> to Color. Add <strong>Avg Orders Per Customer</strong> to Label.</li>
+          <li>Now add a Region dimension filter and filter to a subset of regions. Verify the remaining bars update — this confirms INCLUDE respects dimension filters.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A bar chart showing how many orders each region's customers place on average. The values update when you apply a Region filter — confirming INCLUDE (unlike FIXED) respects dimension filters.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 4: Customer First Purchase Cohort</h4>
+        <p>Time: ~10 minutes. Prerequisite: Lab 1 complete.</p>
+        <ol>
+          <li>Create a calculated field named <strong>First Purchase Year</strong>:<br>
+            <code>{ FIXED [customer_id] : MIN(YEAR([order_date])) }</code>
+          </li>
+          <li>Create a calculated field named <strong>Cohort Revenue</strong>:<br>
+            <code>SUM(IF [First Purchase Year] = 2023 THEN [revenue] ELSE 0 END)</code><br>
+            (Adjust the year to match a year present in your data.)
+          </li>
+          <li>Build a bar chart: drag <code>category</code> to Columns, <strong>Cohort Revenue</strong> to Rows.</li>
+          <li>This shows revenue from customers who made their first purchase in 2023 — a classic cohort metric.</li>
+          <li>Duplicate the <strong>Cohort Revenue</strong> calculated field and change the year to create a comparison cohort (e.g., 2024). Add both to a dual-axis chart.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A chart showing category-level revenue from a specific customer acquisition cohort, enabling year-on-year cohort comparison — the foundation of retention and lifetime value analysis.
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <h4>💡 What's Next</h4>
+        <p>You have mastered all three LOD expression types. In Module 6 — the final module — you will learn how to assemble your charts and dashboards into a guided analytical <strong>Story</strong> using Story Points, and how to wire up <strong>Action Filters</strong> to create truly interactive, production-grade dashboards.</p>
+      </div>
+    `
+  }
+];
+
+
+/* ─────────────────────────────────────────────────────────
+  DO NOT EDIT BELOW THIS LINE
+  (Auth, rendering, Firestore — all generic / reusable)
+───────────────────────────────────────────────────────── */
+
+let _uid       = null;
+let _completed = [];   /* Array of completed section IDs for this module */
+
+/* ── Auth handlers ───────────────────────────────────────── */
+document.getElementById('signin-btn').addEventListener('click', () => {
+  signInWithPopup(auth, new GoogleAuthProvider()).catch(e => {
+    document.getElementById('ep-error').textContent = e.message || 'Sign-in failed.';
+    document.getElementById('ep-error').style.display = 'block';
+  });
+});
+document.getElementById('signout-btn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    if (!user.email || !user.email.endsWith('@sourcefuse.com')) {
+      document.getElementById('ep-error').textContent = 'Only @sourcefuse.com accounts are allowed.';
+      document.getElementById('ep-error').style.display = 'block';
+      await signOut(auth); return;
+    }
+    _uid = user.uid;
+    document.getElementById('user-avatar').src  = user.photoURL || '';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('loading-overlay').style.display = 'flex';
+    await loadCompleted();
+    document.getElementById('loading-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderAll();
+  } else {
+    _uid = null;
+    document.getElementById('app').style.display   = 'none';
+    document.getElementById('auth-overlay').style.display = 'flex';
+  }
+});
+
+/* ── Email sign-in ───────────────────────────────────────── */
+window.sfEmailSignIn = function() {
+  const email = (document.getElementById('ep-email').value || '').trim().toLowerCase();
+  const pwd   =  document.getElementById('ep-password').value || '';
+  const errEl =  document.getElementById('ep-error');
+  errEl.style.display = 'none';
+  if (!email || !pwd)  { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  if (!email.endsWith('@sourcefuse.com')) { errEl.textContent = 'Only @sourcefuse.com accounts are allowed.'; errEl.style.display = 'block'; return; }
+  signInWithEmailAndPassword(auth, email, pwd).catch(e => {
+    errEl.textContent = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') ? 'Incorrect password.'
+      : (e.code === 'auth/user-not-found') ? 'No account found for this email.' : e.message;
+    errEl.style.display = 'block';
+  });
+};
+
+/* ── Firestore: load ─────────────────────────────────────── */
+async function loadCompleted() {
+  const snap = await getDoc(doc(db, 'progress', _uid));
+  _completed = snap.exists() ? (snap.data()[MODULE_KEY] || []) : [];
+}
+
+/* ── Firestore: save (arrayUnion — atomic, no race conditions) */
+async function markComplete(id) {
+  if (!_uid) return;
+  if (_completed.includes(id)) return;
+  _completed = [..._completed, id];
+  const ref = doc(db, 'progress', _uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, { [MODULE_KEY]: _completed, updatedAt: serverTimestamp() });
+  } else {
+    await updateDoc(ref, { [MODULE_KEY]: arrayUnion(id), updatedAt: serverTimestamp() });
+  }
+  updateSectionUI(id);
+  updateSidebarProgress();
+}
+
+/* ── Render all sections ─────────────────────────────────── */
+function renderAll() {
+  renderSections();
+  renderNavItems();
+  updateSidebarProgress();
+}
+
+function renderSections() {
+  const container = document.getElementById('sections-container');
+  container.innerHTML = SECTIONS.map(s => {
+    const done      = _completed.includes(s.id);
+    const badgeHtml = s.badge
+      ? `<span class="nav-badge ${BADGE_CLASSES[s.badge]}">${BADGES[s.badge]}</span>`
+      : '';
+    return `
+      <div class="section-block" id="block-${s.id}">
+        <div class="section-header" onclick="toggleSection(${s.id})">
+          <span class="section-num">${MODULE_NUM}.${s.id}</span>
+          <span class="section-title">${s.title}</span>
+          ${badgeHtml}
+          ${done ? '<span style="color:#43A047;font-size:.85rem;">✓</span>' : ''}
+          <span class="section-toggle" id="toggle-${s.id}">▼</span>
+        </div>
+        <div class="section-body" id="body-${s.id}">
+          ${s.content}
+          <button class="complete-btn ${done ? 'done' : ''}"
+                  id="complete-btn-${s.id}"
+                  onclick="handleMarkComplete(${s.id})"
+                  ${done ? 'disabled' : ''}>
+            ${done ? '✅ Completed' : '✔ Mark as Completed'}
+          </button>
+          <span class="save-indicator" id="indicator-${s.id}"></span>
+        </div>
+      </div>`;
+  }).join('');
+
+  /* Auto-open first incomplete section */
+  const firstIncomplete = SECTIONS.find(s => !_completed.includes(s.id));
+  if (firstIncomplete) toggleSection(firstIncomplete.id);
+  else if (SECTIONS.length > 0) toggleSection(SECTIONS[0].id);
+}
+
+function renderNavItems() {
+  const nav = document.getElementById('nav-items');
+  nav.innerHTML = SECTIONS.map(s => {
+    const done  = _completed.includes(s.id);
+    const badge = s.badge ? `<span class="nav-badge ${BADGE_CLASSES[s.badge]}">${BADGES[s.badge]}</span>` : '';
+    return `<div class="nav-item ${done?'completed':''}" id="nav-${s.id}" onclick="scrollToSection(${s.id})">
+      <span>${MODULE_NUM}.${s.id} ${s.title}</span>${badge}
+    </div>`;
+  }).join('');
+}
+
+function updateSidebarProgress() {
+  const done = _completed.length;
+  const pct  = Math.round((done / SECTIONS.length) * 100);
+  document.getElementById('sidebar-bar').style.width = pct + '%';
+  document.getElementById('sidebar-pct').textContent  = pct + '%';
+}
+
+function updateSectionUI(id) {
+  const btn  = document.getElementById(`complete-btn-${id}`);
+  const nav  = document.getElementById(`nav-${id}`);
+  const blk  = document.getElementById(`block-${id}`);
+  if (btn) { btn.classList.add('done'); btn.disabled = true; btn.textContent = '✅ Completed'; }
+  if (nav) nav.classList.add('completed');
+  /* Add ✓ tick to section header */
+  const hdr  = blk?.querySelector('.section-header');
+  if (hdr && !hdr.querySelector('.done-tick')) {
+    const tick = document.createElement('span');
+    tick.className = 'done-tick';
+    tick.style.cssText = 'color:#43A047;font-size:.85rem;';
+    tick.textContent = '✓';
+    hdr.insertBefore(tick, hdr.querySelector('.section-toggle'));
+  }
+}
+
+/* ── Button click handler ────────────────────────────────── */
+window.handleMarkComplete = async function(id) {
+  const btn = document.getElementById(`complete-btn-${id}`);
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving…';
+  const ind = document.getElementById(`indicator-${id}`);
+  if (ind) ind.textContent = 'Saving…';
+  await markComplete(id);
+  if (ind) { ind.textContent = 'Saved ✓'; setTimeout(() => ind.textContent = '', 2000); }
+};
+
+/* ── Accordion toggle ────────────────────────────────────── */
+window.toggleSection = function(id) {
+  SECTIONS.forEach(s => {
+    const body   = document.getElementById(`body-${s.id}`);
+    const toggle = document.getElementById(`toggle-${s.id}`);
+    const nav    = document.getElementById(`nav-${s.id}`);
+    if (s.id === id) {
+      const isOpen = body.classList.contains('open');
+      body.classList.toggle('open', !isOpen);
+      toggle?.classList.toggle('open', !isOpen);
+      nav?.classList.toggle('active', !isOpen);
+    } else {
+      body.classList.remove('open');
+      toggle?.classList.remove('open');
+      nav?.classList.remove('active');
+    }
+  });
+};
+
+window.scrollToSection = function(id) {
+  toggleSection(id);
+  document.getElementById(`block-${id}`)?.scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+/* Keep this for theme toggle if needed — no-op by default */
+window.toggleTheme = () => {};
+window.markComplete = markComplete;
+</script>
+</body>
+</html>
