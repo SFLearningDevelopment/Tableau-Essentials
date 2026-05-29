@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+<title>Tableau Essentials — Module 4: Sets, Groups &amp; Hierarchies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── DESIGN TOKENS ──────────────────────────────────────────── */
+:root{
+  --blue:#1565C0;
+  --blue-dark:#0D47A1;
+  --blue-light:#E3F2FD;
+  --blue-mid:#90CAF9;
+  --navy:#0D47A1;
+  --text:#1a2332;
+  --text2:#4a5568;
+  --text-dim:#4a5568;
+  --text-dimmer:#8fa3bc;
+  --muted:#8fa3bc;
+  --border:#d0dae8;
+  --bg:#0f1117;         /* Dark page background */
+  --bg2:#ffffff;        /* Card / surface background */
+  --bg3:#f0f4f9;        /* Subtle tinted surface */
+  --green:#1a6b3a;
+  --green-light:#e8f5ed;
+  --orange:#92600a;
+  --orange-light:#fff8e6;
+  --coral:#c0392b;
+  --coral-light:#fdf0ee;
+  --purple:#5b4fcf;
+  --purple-light:#f5f0ff;
+  --success:#43A047;    /* GREEN — completed state */
+  --success-dark:#2E7D32;
+  --danger:#DC2626;     /* RED  — "Mark as Completed" default */
+  --danger-dark:#B91C1C;
+  --radius:12px;
+  --shadow:0 4px 12px rgba(15,23,42,.06);
+  --font-sans:'Source Sans 3','Segoe UI',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code','Source Code Pro',Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+a{color:var(--blue);text-decoration:none;}
+a:hover{color:var(--blue-dark);}
+code,pre,.mono{font-family:var(--font-mono);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── AUTH OVERLAY ───────────────────────────────────────────── */
+#auth-overlay,.auth-overlay{position:fixed;inset:0;background:rgba(20,30,50,.85);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:#fff;border-radius:20px;padding:48px 44px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;}
+.auth-card img{height:38px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;}
+.auth-card h2{font-size:1.3rem;font-weight:800;color:#0f172a;margin-bottom:8px;}
+.auth-card p{color:#64748b;font-size:.95rem;line-height:1.6;margin-bottom:24px;}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#2563EB;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:.95rem;font-weight:700;cursor:pointer;width:100%;transition:all .2s;box-shadow:0 2px 8px rgba(37,99,235,.35);}
+.google-btn:hover{background:#1D4ED8;transform:translateY(-1px);}
+.auth-divider{margin:16px 0 14px;color:#9ca3af;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;}
+.auth-input{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:11px 13px;font-size:.9rem;margin-bottom:8px;outline:none;font-family:var(--font-sans);color:#111827;background:#fff;display:block;box-sizing:border-box;}
+.auth-input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.email-signin-btn{width:100%;background:#2563EB;color:#fff;border:none;border-radius:12px;padding:13px;font-size:.92rem;font-weight:700;cursor:pointer;margin-top:4px;transition:all .2s;}
+.email-signin-btn:hover{background:#1D4ED8;transform:translateY(-1px);}
+#ep-error{display:none;font-size:.82rem;color:#dc2626;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:8px 12px;margin-top:4px;}
+
+/* ── LOADING ────────────────────────────────────────────────── */
+#loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:none;align-items:center;justify-content:center;}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+
+/* ── HEADER / NAV ───────────────────────────────────────────── */
+.header{background:#1565C0;border-bottom:none;padding:13px 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.35);}
+.header-left{display:flex;align-items:center;gap:10px;font-size:.88rem;color:rgba(255,255,255,.8);}
+.header-left img{height:28px;}
+.header-left a{color:#fff;font-weight:600;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.user-chip{display:flex;align-items:center;gap:7px;font-size:.82rem;color:#fff;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:4px 12px 4px 4px;}
+.user-chip img{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.5);}
+.btn-sm{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:7px;cursor:pointer;font-size:.8rem;transition:all .15s;font-family:var(--font-sans);}
+.btn-sm:hover{background:rgba(255,255,255,.25);}
+
+/* ── LAYOUT ─────────────────────────────────────────────────── */
+.layout{display:flex;min-height:calc(100vh - 54px);}
+
+/* ── SIDEBAR ────────────────────────────────────────────────── */
+.sidebar{width:275px;background:var(--bg2);border-right:1px solid var(--border);padding:18px 0;overflow-y:auto;position:sticky;top:54px;height:calc(100vh - 54px);flex-shrink:0;}
+.sidebar-title{padding:0 18px 10px;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dimmer);font-family:var(--font-mono);border-bottom:1px solid var(--border);margin-bottom:8px;}
+.sidebar-progress{padding:10px 18px;background:var(--bg3);margin:0 10px 10px;border-radius:8px;}
+.sidebar-progress-bar{background:var(--border);border-radius:99px;height:4px;margin-top:5px;overflow:hidden;}
+.sidebar-progress-fill{height:100%;border-radius:99px;background:var(--success);transition:width .3s;}
+.nav-item{padding:9px 18px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;display:flex;align-items:center;gap:9px;font-size:.85rem;color:var(--text);}
+.nav-item:hover{background:var(--bg3);}
+.nav-item.active{border-left-color:var(--blue);background:var(--blue-light);color:var(--blue);font-weight:600;}
+.nav-item.completed{color:var(--success);}
+.nav-badge{font-size:.63rem;padding:2px 6px;border-radius:3px;font-weight:700;font-family:var(--font-mono);}
+.badge-foundation{background:var(--green-light);color:var(--green);}
+.badge-essential{background:var(--blue-light);color:var(--blue);}
+.badge-important{background:var(--orange-light);color:var(--orange);}
+.nav-footer{padding:14px 18px;border-top:1px solid var(--border);margin-top:auto;font-size:.78rem;color:var(--text-dimmer);}
+.nav-btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-family:var(--font-mono);color:var(--blue);text-decoration:none;padding:10px 18px;border:1px solid var(--blue-mid);border-radius:8px;background:var(--blue-light);font-weight:600;cursor:pointer;}
+.nav-btn:hover{background:var(--blue-mid);}
+.nav-btn.secondary{background:var(--bg2);color:var(--text-dim);border-color:var(--border);}
+
+/* ── MAIN CONTENT ───────────────────────────────────────────── */
+.content{flex:1;padding:30px 38px;max-width:840px;}
+.module-hero{margin-bottom:28px;}
+.module-hero h1{font-size:1.9rem;font-weight:800;margin-bottom:7px;color:var(--text);}
+.module-hero p{color:var(--text-dim);font-size:.97rem;}
+.module-meta{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.meta-chip{font-size:.76rem;padding:4px 10px;border-radius:6px;font-weight:600;}
+.chip-weight{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);}
+.chip-sections{background:var(--green-light);color:var(--green);border:1px solid #a3d4b8;}
+
+/* ── SECTION ACCORDION ──────────────────────────────────────── */
+.section-block{margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg2);}
+.section-header{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg2);user-select:none;transition:background .12s;}
+.section-header:hover{background:var(--bg3);}
+.section-num{font-family:var(--font-mono);font-weight:700;color:var(--blue);font-size:.9rem;min-width:28px;}
+.section-title{flex:1;font-size:1rem;font-weight:600;color:var(--text);}
+.section-toggle{color:var(--text-dimmer);font-size:.85rem;transition:transform .2s;}
+.section-toggle.open{transform:rotate(180deg);}
+.section-body{display:none;padding:18px 22px 14px;border-top:1px solid var(--border);font-size:.93rem;color:var(--text-dim);line-height:1.75;}
+.section-body.open{display:block;}
+.section-body h3{color:var(--text);font-size:1.05rem;margin:16px 0 8px;font-weight:700;}
+.section-body h3:first-child{margin-top:0;}
+.section-body h4{color:var(--text);font-size:.95rem;margin:12px 0 6px;font-weight:600;}
+.section-body p{margin-bottom:10px;}
+.section-body ul,.section-body ol{margin:8px 0 10px 20px;}
+.section-body li{margin-bottom:4px;}
+.section-body code{font-family:var(--font-mono);font-size:.83rem;background:var(--bg3);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:#0f4a7a;}
+.section-body pre{background:#1e2433;color:#cdd6f4;padding:16px;border-radius:8px;font-size:.83rem;font-family:var(--font-mono);overflow-x:auto;margin:12px 0;position:relative;}
+
+/* ── CALLOUT BOXES ──────────────────────────────────────────── */
+.callout{border-left:4px solid var(--blue);background:var(--blue-light);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;}
+.callout h4{color:var(--blue);font-size:.9rem;margin-bottom:6px;font-weight:700;}
+.callout-tip{border-left-color:var(--green);background:var(--green-light);}
+.callout-tip h4{color:var(--green);}
+.callout-warn{border-left-color:#92600a;background:var(--orange-light);}
+.callout-warn h4{color:#92600a;}
+.callout-info{border-left-color:var(--blue);background:var(--blue-light);}
+.callout-info h4{color:var(--blue);}
+
+/* ── ANALOGY BOXES ──────────────────────────────────────────── */
+.analogy-box{background:var(--blue-light);border-radius:8px;padding:14px 18px;margin:12px 0;}
+.analogy-box h4{margin-bottom:10px;color:var(--blue);font-size:.93rem;font-weight:700;}
+.analogy-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:.88rem;}
+.analogy-row strong{color:var(--text);min-width:120px;}
+
+/* ── DIAGRAMS ────────────────────────────────────────────────── */
+.diagram{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:18px;margin:14px 0;text-align:center;}
+.diagram-title{font-size:.7rem;color:var(--text-dimmer);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:12px;letter-spacing:.06em;font-weight:600;}
+.diagram-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:8px 0;}
+.diagram-box{padding:8px 14px;border-radius:6px;font-size:.83rem;font-weight:600;font-family:var(--font-mono);}
+.diagram-box.blue{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid);}
+.diagram-box.accent{background:var(--blue);color:#fff;}
+.diagram-box.green{background:var(--green-light);color:var(--green);border:1px solid #a3d4b8;}
+.diagram-box.purple{background:var(--purple-light);color:var(--purple);border:1px solid #c4bdf0;}
+.diagram-box.red{background:var(--coral-light);color:var(--coral);border:1px solid #f0b8b2;}
+
+/* ── TEST QUESTIONS ─────────────────────────────────────────── */
+.test-questions{background:var(--orange-light);border:1px solid #f0d4a0;border-radius:8px;padding:14px 18px;margin:14px 0;}
+.test-questions h4{color:#92600a;margin-bottom:8px;font-weight:700;font-size:.93rem;}
+.test-questions ul{margin-left:18px;}
+.test-questions li{color:var(--text-dim);font-size:.88rem;}
+
+/* ── COMPLETE BUTTON ─────────────────────────────────────────
+   DEFAULT (not done): RED  → "I still need to mark this"
+   DONE state:         GREEN → "Section completed ✓"
+   ─────────────────────────────────────────────────────────── */
+.complete-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--danger);    /* RED by default */
+  color:#fff;border:none;border-radius:8px;
+  padding:10px 24px;font-size:.95rem;font-weight:700;
+  cursor:pointer;margin-top:16px;
+  transition:background .2s,transform .1s;
+  font-family:var(--font-sans);
+}
+.complete-btn:hover:not(:disabled){
+  background:var(--danger-dark);
+  transform:translateY(-1px);
+}
+.complete-btn.done{
+  background:var(--success);   /* GREEN when completed */
+  cursor:not-allowed;
+}
+.complete-btn:disabled{cursor:not-allowed;}
+.save-indicator{font-size:.75rem;color:var(--text-dimmer);font-family:var(--font-mono);margin-left:8px;}
+/* ── LAB BLOCKS ─────────────────────────────────────────────── */
+.lab{background:#f0f4f9;border:1px solid #d0dae8;border-left:4px solid var(--blue);border-radius:8px;padding:18px 22px;margin:16px 0;}
+.lab h4{color:var(--blue);font-size:.95rem;margin-bottom:4px;font-weight:700;}
+.lab p{margin:4px 0 10px;color:var(--text2);font-size:.88rem;}
+.lab ol{margin:10px 0 10px 18px;}
+.lab li{margin-bottom:7px;font-size:.9rem;line-height:1.6;}
+.lab code{font-family:var(--font-mono);font-size:.82rem;background:#e8f0fe;border:1px solid #c5d5f5;padding:1px 5px;border-radius:4px;color:#1a4fa0;}
+.lab-expected{background:#e8f5ed;border:1px solid #a3d4b8;border-radius:6px;padding:10px 14px;margin-top:12px;font-size:.88rem;color:var(--green);}
+.lab-expected strong{color:var(--green);}
+.lab-download{background:var(--orange-light);border:1px solid #f0d4a0;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:.88rem;color:var(--orange);}
+.lab-download strong{color:var(--orange);}
+
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH OVERLAY ═══════════════════════════════════════════ -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <img src="https://sflearningdevelopment.github.io/sf-internal-kubernetes-certification/sourcefuse-logo.png" alt="SourceFuse"/>
+    <h2>Sign In Required</h2>
+    <p>Sign in with your SourceFuse Google account to access this module.</p>
+    <button class="google-btn" id="signin-btn">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+      Sign in with Google
+    </button>
+    <div class="auth-divider">OR</div>
+    <input id="ep-email" type="email" placeholder="you@sourcefuse.com" autocomplete="email" class="auth-input">
+    <input id="ep-password" type="password" placeholder="Password" autocomplete="current-password" class="auth-input">
+    <button onclick="sfEmailSignIn()" class="email-signin-btn">Sign in with Email</button>
+    <div id="ep-error"></div>
+  </div>
+</div>
+
+<div id="loading-overlay"><div class="spinner"></div></div>
+
+<div id="app" style="display:none;">
+
+<!-- ══ HEADER ════════════════════════════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <img src="https://sflearningdevelopment.github.io/sf-internal-kubernetes-certification/sourcefuse-logo.png" alt="SourceFuse"/>
+    <a href="tableau-dashboard.html?v=2026-06-01-v1">← Dashboard</a> / Module 4
+  </div>
+  <div class="header-right">
+    <div class="user-chip">
+      <img id="user-avatar" src="" alt=""/>
+      <span id="user-name" style="font-size:.82rem;"></span>
+    </div>
+    <button class="btn-sm" id="signout-btn">Sign Out</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+  <nav class="sidebar">
+    <div class="sidebar-title">Module 4 — 8 Sections</div>
+    <div class="sidebar-progress">
+      <div style="font-size:.78rem;color:var(--text2);display:flex;justify-content:space-between;">
+        <span>Progress</span><span id="sidebar-pct">0%</span>
+      </div>
+      <div class="sidebar-progress-bar">
+        <div class="sidebar-progress-fill" id="sidebar-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="nav-items"></div><!-- Dynamically populated by JS -->
+    <div class="nav-footer">
+      <a href="tableau-dashboard.html?v=2026-06-01-v1" class="nav-btn secondary">← Dashboard</a>
+      <a href="tableau-module-5.html?v=2026-06-01-v1" class="nav-btn">Module 5: LOD Expressions →</a>
+    </div>
+  </nav>
+
+  <!-- ══ MAIN CONTENT ════════════════════════════════════════ -->
+  <div class="content">
+    <div class="module-hero">
+      <h1>🗂️ Module 4: Sets, Groups &amp; Hierarchies</h1>
+      <p>Organise and navigate your data with Sets, Groups, and Hierarchies — three complementary tools that let you segment, categorise, and drill through dimensions interactively.</p>
+      <div class="module-meta">
+        <span class="meta-chip chip-weight">20% Exam Weight</span>
+        <span class="meta-chip chip-sections">8 Sections</span>
+      </div>
+    </div>
+    <div id="sections-container"></div><!-- Dynamically populated by JS -->
+  </div>
+
+</div><!-- .layout -->
+</div><!-- #app -->
+
+<!-- ══════════════════════════════════════════════════════════
+  FIREBASE + CONTENT
+══════════════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }       from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup,
+         signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+/* ── Firebase config ─────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyC-I-IOCq2fCwa471fsD5xOn6SYQSBDp7Q",
+  authDomain:        "sfcertification-grafana.firebaseapp.com",
+  projectId:         "sfcertification-grafana",
+  storageBucket:     "sfcertification-grafana.firebasestorage.app",
+  messagingSenderId: "227322696511",
+  appId:             "1:227322696511:web:12e7ced7dd3d45fa06798a"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ── Module identity ─────────────────────────────────────── */
+const MODULE_KEY = 'tb4'; // e.g. 'm1', 'pm1', 'k8s_m1'
+const MODULE_NUM = 4;             // integer
+
+/* ── Section difficulty badge labels ────────────────────── */
+const BADGES       = { foundation:'Foundation', essential:'Essential', important:'Important' };
+const BADGE_CLASSES= { foundation:'badge-foundation', essential:'badge-essential', important:'badge-important' };
+
+/* ════════════════════════════════════════════════════════════
+  SECTIONS ARRAY — replace with your course content
+  Each section:
+    id:      unique integer (1-based within this module)
+    title:   section heading shown in sidebar + accordion
+    badge:   'foundation' | 'essential' | 'important'
+    content: HTML string for the section body
+             Use the helper elements in CSS:
+             .callout .callout-tip .callout-warn .callout-info
+             .analogy-box .analogy-row
+             .diagram .diagram-row .diagram-box
+             .test-questions
+════════════════════════════════════════════════════════════ */
+const SECTIONS = [
+  {
+    id: 1,
+    title: 'Understanding Groups in Tableau',
+    badge: 'foundation',
+    content: `
+      <h3>What are Groups?</h3>
+      <p>A <strong>Group</strong> in Tableau lets you combine individual dimension members into higher-level categories. Groups are created from existing fields and appear as a new dimension in the Data pane, marked with a paperclip icon. They are ideal for ad-hoc categorisation that does not exist in the source data.</p>
+
+      <div class="analogy-box">
+        <h4>🌍 Real-World Analogy</h4>
+        <div class="analogy-row"><strong>Source field: City</strong><span>→</span><span>London, Manchester, Birmingham, Edinburgh, Glasgow</span></div>
+        <div class="analogy-row"><strong>Group: Region</strong><span>→</span><span>England = {London, Manchester, Birmingham}, Scotland = {Edinburgh, Glasgow}</span></div>
+        <div class="analogy-row"><strong>Result</strong><span>→</span><span>A new "City (group)" dimension that rolls up cities to regions</span></div>
+      </div>
+
+      <h3>Groups vs Calculated Fields</h3>
+      <p>You can achieve similar grouping with a calculated field using <code>IF/CASE</code> logic. The difference:</p>
+      <ul>
+        <li><strong>Groups</strong> — created by selecting values visually; easier to maintain for non-technical users; stored in the workbook</li>
+        <li><strong>Calculated field groups</strong> — more flexible (can use conditions, wildcards); required when grouping logic is complex or data-driven</li>
+      </ul>
+
+      <div class="callout callout-info">
+        <h4>ℹ️ Note</h4>
+        <p>Groups are workbook-specific. They are saved in the <code>.twb</code> file and are not automatically available in other workbooks. If you need a reusable grouping across many workbooks, consider adding the grouping logic to a Tableau Prep flow or the source database.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>What icon distinguishes a grouped field from a regular dimension in the Tableau Data pane?</li>
+          <li>When would you use a Group instead of a calculated field for categorisation?</li>
+          <li>Are groups available across multiple workbooks connected to the same data source?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 2,
+    title: 'Creating and Managing Groups',
+    badge: 'foundation',
+    content: `
+      <h3>Three Ways to Create a Group</h3>
+      <ul>
+        <li><strong>From the view</strong> — select multiple marks (Ctrl/Cmd+click), then click the paperclip icon in the tooltip or right-click → <em>Group</em></li>
+        <li><strong>From the Data pane</strong> — right-click any dimension → <em>Create → Group</em></li>
+        <li><strong>From the Edit Group dialog</strong> — manually assign members to groups by name</li>
+      </ul>
+
+      <h3>The Edit Group Dialog</h3>
+      <p>Right-click a grouped field in the Data pane → <strong>Edit Group</strong> to open the Group editor. Here you can:</p>
+      <ul>
+        <li>Rename group labels</li>
+        <li>Move members between groups (drag or use Add/Remove)</li>
+        <li>Enable <strong>Include 'Other'</strong> — any member not explicitly assigned to a group is placed in an "Other" bucket</li>
+        <li>Delete the group entirely</li>
+      </ul>
+
+      <h3>Show Members in "Other"</h3>
+      <p>The <strong>Include 'Other'</strong> checkbox is important for completeness. Without it, ungrouped members are simply shown under their original name. With it, all ungrouped members are collapsed into a single "Other" row — useful when you want to highlight the groups you care about while suppressing the rest.</p>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>When you group members in the view, Tableau creates the group and immediately updates the chart to use the new grouped dimension. You can then drag the original dimension back alongside the group to see both the group and the individual member breakdown simultaneously.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>How do you edit the members of an existing group in Tableau?</li>
+          <li>What does enabling "Include 'Other'" do in the Edit Group dialog?</li>
+          <li>You select three bars in a bar chart and click the paperclip icon. What does Tableau create?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 3,
+    title: 'Introduction to Sets',
+    badge: 'essential',
+    content: `
+      <h3>What is a Set?</h3>
+      <p>A <strong>Set</strong> is a custom field that classifies dimension members as either <strong>IN</strong> or <strong>OUT</strong> of a defined condition. Think of a set as a binary flag — every member of the dimension is either in the set or not. Sets appear in the Data pane with a Venn-diagram icon and can be used anywhere a dimension field can be used.</p>
+
+      <div class="analogy-box">
+        <h4>🌍 Real-World Analogy</h4>
+        <div class="analogy-row"><strong>Dimension: Customers</strong><span>→</span><span>All 500 customers in the database</span></div>
+        <div class="analogy-row"><strong>Set: Top 20 Customers</strong><span>→</span><span>IN = 20 highest-revenue customers | OUT = the other 480</span></div>
+        <div class="analogy-row"><strong>Usage</strong><span>→</span><span>Colour a chart by set membership, filter to IN only, or compute set-specific calculations</span></div>
+      </div>
+
+      <h3>Sets vs Groups</h3>
+      <div class="diagram">
+        <div class="diagram-title">Sets vs Groups — Key Differences</div>
+        <div class="diagram-row" style="flex-direction:column;gap:6px;text-align:left;padding:0 16px;">
+          <div style="display:flex;gap:10px;font-size:.83rem;"><strong style="min-width:130px;">Result type</strong><span><strong>Group:</strong> N category labels</span><span style="margin-left:16px;"><strong>Set:</strong> IN / OUT (binary)</span></div>
+          <div style="display:flex;gap:10px;font-size:.83rem;"><strong style="min-width:130px;">Dynamic?</strong><span><strong>Group:</strong> Static only</span><span style="margin-left:16px;"><strong>Set:</strong> Static or dynamic (condition-based)</span></div>
+          <div style="display:flex;gap:10px;font-size:.83rem;"><strong style="min-width:130px;">Best for</strong><span><strong>Group:</strong> Categorising members</span><span style="margin-left:16px;"><strong>Set:</strong> Highlighting/filtering a subset</span></div>
+          <div style="display:flex;gap:10px;font-size:.83rem;"><strong style="min-width:130px;">User-driven?</strong><span><strong>Group:</strong> No</span><span style="margin-left:16px;"><strong>Set:</strong> Yes, via Set Actions</span></div>
+        </div>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>What are the two possible values for any member of a Tableau Set?</li>
+          <li>What Venn-diagram-like icon identifies a Set in the Data pane?</li>
+          <li>You want to highlight the top 10 products dynamically as data changes. Should you use a Group or a Set? Why?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 4,
+    title: 'Creating Static and Dynamic Sets',
+    badge: 'essential',
+    content: `
+      <h3>Creating a Set</h3>
+      <p>Right-click any dimension in the Data pane → <strong>Create → Set</strong>. The Set dialog has three tabs:</p>
+
+      <h3>Tab 1: General (Static Set)</h3>
+      <p>Manually select which members are IN the set. The list is fixed at creation time and does not update as data changes. Use this when the members are known and stable (e.g., a fixed list of strategic accounts).</p>
+
+      <h3>Tab 2: Condition (Dynamic Set by Condition)</h3>
+      <p>Define a rule — for example, "include all customers where SUM(Revenue) > 50,000". The set membership updates automatically when the data refreshes. This is a <strong>dynamic set</strong>.</p>
+
+      <h3>Tab 3: Top (Dynamic Set by Rank)</h3>
+      <p>Include the Top or Bottom N members by a measure — for example, "Top 10 customers by SUM(Revenue)". Membership updates with data. You can also make N a parameter, allowing users to control the threshold interactively.</p>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>A dynamic set recalculates membership every time the view is rendered. If you are using a Top 10 set on a filtered view, the set ranks members within the <em>current filter context</em>. To rank across the full dataset regardless of filters, use a <strong>Context Filter</strong> or an <strong>LOD expression</strong> (covered in Module 5).</p>
+      </div>
+
+      <h3>Using a Set in the View</h3>
+      <p>Once created, drag the set to:</p>
+      <ul>
+        <li><strong>Filters shelf</strong> — show only IN members (most common use)</li>
+        <li><strong>Color card</strong> — colour-code marks as IN (highlighted) vs OUT (muted)</li>
+        <li><strong>Rows/Columns</strong> — split the view into IN and OUT sections</li>
+        <li><strong>Calculated fields</strong> — <code>IF [My Set] THEN 'In Set' ELSE 'Not in Set' END</code></li>
+      </ul>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>What is the difference between a static set and a dynamic set in Tableau?</li>
+          <li>How would you create a set that always contains the top 5 customers by revenue, updating as data changes?</li>
+          <li>You drag a set to the Color card. What colours does Tableau use by default?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 5,
+    title: 'Combined Sets and Set Actions',
+    badge: 'essential',
+    content: `
+      <h3>Combining Two Sets</h3>
+      <p>You can create a <strong>Combined Set</strong> from two sets that share the same dimension. Right-click either set in the Data pane → <strong>Create Combined Set</strong>. The three combination options mirror set theory:</p>
+
+      <div class="diagram">
+        <div class="diagram-title">Set Combination Operations</div>
+        <div class="diagram-row">
+          <div class="diagram-box accent">All members in both sets<br><small>Union (A ∪ B)</small></div>
+          <div class="diagram-box blue">Members in both sets<br><small>Intersection (A ∩ B)</small></div>
+        </div>
+        <div class="diagram-row" style="margin-top:8px;">
+          <div class="diagram-box green">Members in Set A<br>but not Set B<br><small>Difference (A − B)</small></div>
+          <div class="diagram-box red">Members in Set B<br>but not Set A<br><small>Difference (B − A)</small></div>
+        </div>
+      </div>
+
+      <h3>Set Actions</h3>
+      <p><strong>Set Actions</strong> allow dashboard users to control set membership by clicking on marks in the view. This creates a highly interactive dashboard where the user's selection drives what is IN the set — and therefore what gets highlighted, filtered, or calculated throughout the dashboard.</p>
+      <p>Configure a Set Action via <strong>Dashboard → Actions → Add Action → Change Set Values</strong>. Key settings:</p>
+      <ul>
+        <li><strong>Source sheet</strong> — the sheet where the user clicks</li>
+        <li><strong>Target set</strong> — the set whose membership is updated by the click</li>
+        <li><strong>Clearing the selection</strong> — what happens when the user deselects: keep values, add all, or remove all</li>
+      </ul>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>Set Actions are one of the most powerful interactive features in Tableau. A common pattern: a user clicks a bar for "Region: West" — a Set Action adds West to a set — and all other sheets on the dashboard dynamically re-compute to show West vs non-West comparisons, all without any filter dialogs.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>What operation produces only the members that appear in BOTH Set A and Set B?</li>
+          <li>What must be true for two sets to be combined into a Combined Set?</li>
+          <li>How does a Set Action differ from a Filter Action on a dashboard?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 6,
+    title: 'Hierarchies — Drill-Down Navigation',
+    badge: 'essential',
+    content: `
+      <h3>What is a Hierarchy?</h3>
+      <p>A <strong>Hierarchy</strong> in Tableau is an ordered group of dimensions that represents a natural drill-down path — for example, Country → Region → City → Postal Code. Adding a hierarchy gives users a <strong>+/− drill button</strong> on the axis, letting them expand and collapse levels without changing the view type.</p>
+
+      <h3>Creating a Hierarchy</h3>
+      <p>In the Data pane, drag one dimension <em>onto</em> another to create a hierarchy. Tableau will ask you to name it. Alternatively, right-click a field → <strong>Hierarchy → Create Hierarchy</strong>, then drag other fields into it. The order of fields in the hierarchy determines the drill-down sequence (top = highest level, bottom = most granular).</p>
+
+      <h3>Date Hierarchies (Built-in)</h3>
+      <p>Date fields in Tableau automatically have a built-in hierarchy: <strong>Year → Quarter → Month → Week → Day</strong>. When you drag a date to Rows or Columns, Tableau places it at the Year level by default. Click the <strong>+</strong> on the pill to drill down to the next level.</p>
+
+      <div class="diagram">
+        <div class="diagram-title">Custom Geography Hierarchy Example</div>
+        <div class="diagram-row">
+          <div class="diagram-box blue">Country<br><small>Highest level</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box accent">Region<br><small>+1 drill</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box green">City<br><small>+2 drills</small></div>
+          <span style="font-size:1.2rem;color:var(--blue);">→</span>
+          <div class="diagram-box purple">Postal Code<br><small>Most granular</small></div>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <h4>ℹ️ Note</h4>
+        <p>Hierarchies are display conveniences — they do not change the underlying data or create new fields. You can still use any field in the hierarchy independently by dragging it directly from the Data pane, bypassing the hierarchy structure entirely.</p>
+      </div>
+
+      <div class="callout callout-warn">
+        <h4>⚠️ Common Pitfall</h4>
+        <p>If your hierarchy fields are not properly related in the data (e.g., "City" values appear under multiple "Region" values inconsistently), drilling down will produce unexpected cross-joins. Ensure each lower-level value maps to exactly one parent value for clean drill-downs.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>How do you create a custom hierarchy in the Tableau Data pane?</li>
+          <li>What built-in hierarchy does Tableau automatically create for date fields?</li>
+          <li>Does creating a hierarchy in Tableau create new fields or change the data?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 7,
+    title: 'Using Sets and Groups in Calculations',
+    badge: 'important',
+    content: `
+      <h3>Referencing a Set in a Calculated Field</h3>
+      <p>Sets can be used directly in calculated fields. A set evaluates to <code>TRUE</code> for IN members and <code>FALSE</code> for OUT members. Use it with conditional logic:</p>
+      <pre>// Label top customers differently
+IF [Top 20 Customers]
+  THEN "Key Account"
+  ELSE "Standard"
+END</pre>
+      <pre>// Weight revenue differently for set members
+IF [Top 20 Customers]
+  THEN [revenue] * 1.1  // 10% uplift for key accounts
+  ELSE [revenue]
+END</pre>
+
+      <h3>Referencing a Group in a Calculated Field</h3>
+      <p>Groups can be referenced just like dimensions. The group field returns the group label for each row:</p>
+      <pre>// Use group membership in a calculation
+IF [Category (group)] = "Electronics &amp; Tech"
+  THEN "Digital"
+  ELSE "Physical"
+END</pre>
+
+      <h3>Combining Sets with LOD Expressions (Preview)</h3>
+      <p>Sets become even more powerful when combined with LOD expressions (Module 5). For example, compute the total revenue from IN-set customers, fixed at the overall level regardless of the current filter:</p>
+      <pre>// Revenue from top customers (FIXED to ignore view filters)
+{FIXED : SUM(IF [Top 20 Customers] THEN [revenue] END)}</pre>
+      <p>This pattern — using a set as a condition inside a FIXED LOD — is a common advanced Tableau technique used in cohort analysis, A/B comparison dashboards, and executive benchmarking reports.</p>
+
+      <div class="callout callout-tip">
+        <h4>💡 Key Point</h4>
+        <p>The combination of Sets + Set Actions + LOD expressions gives you parameter-like interactivity without parameters. Users click marks to update set membership; LODs recalculate based on the new set; the entire dashboard reflects the selection — all dynamically, all without a parameter dialog.</p>
+      </div>
+
+      <div class="test-questions">
+        <h4>🎯 Likely Exam Questions</h4>
+        <ul>
+          <li>In a calculated field, what boolean value does a set return for a member that is IN the set?</li>
+          <li>Write a calculated field that labels rows as "VIP" if the customer is in [Top 20 Customers] and "Regular" otherwise.</li>
+          <li>What is the advantage of using a Set Action combined with an LOD expression compared to a standard dashboard filter?</li>
+        </ul>
+      </div>
+    `
+  },
+  {
+    id: 8,
+    title: '🧪 Lab: Sets, Groups and Hierarchies with SF Sales Data',
+    badge: 'important',
+    content: `
+      <h3>Lab Overview</h3>
+      <p>In this lab you will create a group, a dynamic set, a hierarchy, and a set-based calculated field using the SF sales dataset — then combine them in a dashboard that lets users interact with set membership by clicking.</p>
+
+      <div class="lab-download">
+        <strong>📥 Dataset required:</strong><br>
+        Connect to <code>sf-sales-orders.csv</code> (or use <code>sf-sales-prepared.hyper</code> from the Module 2 lab).
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 1: Create a Category Group</h4>
+        <p>Time: ~10 minutes</p>
+        <ol>
+          <li>Open Tableau Desktop and connect to <code>sf-sales-orders.csv</code>.</li>
+          <li>In the Data pane, right-click <code>category</code> → <strong>Create → Group</strong>.</li>
+          <li>In the Edit Group dialog, Ctrl/Cmd+click <strong>Electronics</strong> and <strong>Technology</strong> → click <strong>Group</strong>. Name the group <strong>Digital Goods</strong>.</li>
+          <li>Group the remaining categories into <strong>Physical Goods</strong>. Check <strong>Include 'Other'</strong> for any unmapped values.</li>
+          <li>Name the grouped field <strong>Category Group</strong> and click OK.</li>
+          <li>Build a bar chart: drag <code>Category Group</code> to Columns, <code>revenue</code> to Rows. You should see two bars: Digital Goods and Physical Goods.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A two-bar chart with Digital Goods and Physical Goods, with revenue aggregated correctly across their member categories.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 2: Create a Dynamic Top 10 Customers Set</h4>
+        <p>Time: ~10 minutes. Prerequisite: Lab 1 complete.</p>
+        <ol>
+          <li>In the Data pane, right-click <code>customer_id</code> → <strong>Create → Set</strong>. Name it <strong>Top 10 Customers</strong>.</li>
+          <li>Click the <strong>Top</strong> tab. Select <strong>By field: Top 10 by SUM(Revenue)</strong>. Click OK.</li>
+          <li>Create a new worksheet. Drag <code>customer_id</code> to Rows and <code>revenue</code> to Columns.</li>
+          <li>Drag <strong>Top 10 Customers</strong> to the <strong>Color</strong> card. The chart shows IN customers highlighted vs OUT.</li>
+          <li>Also drag <strong>Top 10 Customers</strong> to the <strong>Filters</strong> shelf → select <strong>In</strong> → OK. Now only the top 10 are shown.</li>
+          <li>Rename this sheet <strong>Top 10 Customers</strong>.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A bar chart showing only the 10 highest-revenue customers, colour-coded as IN the set. The set updates automatically if data changes.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 3: Create a Category Hierarchy</h4>
+        <p>Time: ~5 minutes</p>
+        <ol>
+          <li>In the Data pane, drag <code>sub_category</code> (if present) onto <code>category</code>. Tableau prompts for a hierarchy name — type <strong>Product Hierarchy</strong>. Click OK.</li>
+          <li>If <code>sub_category</code> is not in the dataset, right-click <code>category</code> → <strong>Hierarchy → Create Hierarchy</strong> named <strong>Product Hierarchy</strong>, then drag <code>region</code> into it as a second level (as a practice stand-in).</li>
+          <li>Build a bar chart using the hierarchy: drag <strong>Product Hierarchy</strong> (at the Category level) to Rows, <code>revenue</code> to Columns.</li>
+          <li>Click the <strong>+</strong> on the Category pill in the Rows shelf to drill down. The bars split to the next hierarchy level.</li>
+          <li>Click the <strong>−</strong> to collapse back to Category level.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A drillable bar chart. Clicking + expands the hierarchy to show sub-levels; clicking − collapses it back.
+        </div>
+      </div>
+
+      <div class="lab">
+        <h4>🧪 Lab 4: Set-Based Calculated Field + Dashboard</h4>
+        <p>Time: ~10 minutes. Prerequisite: Labs 1–3 complete.</p>
+        <ol>
+          <li>Create a calculated field named <strong>Customer Tier</strong>:<br>
+            <code>IF [Top 10 Customers] THEN "Key Account" ELSE "Standard" END</code>
+          </li>
+          <li>Create a new dashboard. Add the <strong>Top 10 Customers</strong> sheet and a new sheet showing revenue by <strong>Customer Tier</strong>.</li>
+          <li>Go to <strong>Dashboard → Actions → Add Action → Change Set Values</strong>.</li>
+          <li>Set Source Sheet to <strong>Top 10 Customers</strong>, Target Set to <strong>Top 10 Customers</strong>, Running the action on <strong>Select</strong>.</li>
+          <li>Click a bar in the Top 10 sheet — the selected customer is now the only IN member. The Customer Tier chart updates to reflect this.</li>
+          <li>Click the background (deselect) to reset the set to the full Top 10.</li>
+        </ol>
+        <div class="lab-expected">
+          <strong>Expected outcome:</strong> A dashboard where clicking a customer bar uses a Set Action to update the set, dynamically changing the Customer Tier chart. This is the same mechanism used in production executive dashboards.
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <h4>💡 What's Next</h4>
+        <p>You have now mastered Sets, Groups, and Hierarchies. In Module 5 you will learn <strong>LOD Expressions</strong> — Tableau's most powerful calculation feature — which lets you compute aggregations at any level of detail, independent of the current view.</p>
+      </div>
+    `
+  }
+];
+
+
+/* ─────────────────────────────────────────────────────────
+  DO NOT EDIT BELOW THIS LINE
+  (Auth, rendering, Firestore — all generic / reusable)
+───────────────────────────────────────────────────────── */
+
+let _uid       = null;
+let _completed = [];   /* Array of completed section IDs for this module */
+
+/* ── Auth handlers ───────────────────────────────────────── */
+document.getElementById('signin-btn').addEventListener('click', () => {
+  signInWithPopup(auth, new GoogleAuthProvider()).catch(e => {
+    document.getElementById('ep-error').textContent = e.message || 'Sign-in failed.';
+    document.getElementById('ep-error').style.display = 'block';
+  });
+});
+document.getElementById('signout-btn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    if (!user.email || !user.email.endsWith('@sourcefuse.com')) {
+      document.getElementById('ep-error').textContent = 'Only @sourcefuse.com accounts are allowed.';
+      document.getElementById('ep-error').style.display = 'block';
+      await signOut(auth); return;
+    }
+    _uid = user.uid;
+    document.getElementById('user-avatar').src  = user.photoURL || '';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('loading-overlay').style.display = 'flex';
+    await loadCompleted();
+    document.getElementById('loading-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderAll();
+  } else {
+    _uid = null;
+    document.getElementById('app').style.display   = 'none';
+    document.getElementById('auth-overlay').style.display = 'flex';
+  }
+});
+
+/* ── Email sign-in ───────────────────────────────────────── */
+window.sfEmailSignIn = function() {
+  const email = (document.getElementById('ep-email').value || '').trim().toLowerCase();
+  const pwd   =  document.getElementById('ep-password').value || '';
+  const errEl =  document.getElementById('ep-error');
+  errEl.style.display = 'none';
+  if (!email || !pwd)  { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  if (!email.endsWith('@sourcefuse.com')) { errEl.textContent = 'Only @sourcefuse.com accounts are allowed.'; errEl.style.display = 'block'; return; }
+  signInWithEmailAndPassword(auth, email, pwd).catch(e => {
+    errEl.textContent = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') ? 'Incorrect password.'
+      : (e.code === 'auth/user-not-found') ? 'No account found for this email.' : e.message;
+    errEl.style.display = 'block';
+  });
+};
+
+/* ── Firestore: load ─────────────────────────────────────── */
+async function loadCompleted() {
+  const snap = await getDoc(doc(db, 'progress', _uid));
+  _completed = snap.exists() ? (snap.data()[MODULE_KEY] || []) : [];
+}
+
+/* ── Firestore: save (arrayUnion — atomic, no race conditions) */
+async function markComplete(id) {
+  if (!_uid) return;
+  if (_completed.includes(id)) return;
+  _completed = [..._completed, id];
+  const ref = doc(db, 'progress', _uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, { [MODULE_KEY]: _completed, updatedAt: serverTimestamp() });
+  } else {
+    await updateDoc(ref, { [MODULE_KEY]: arrayUnion(id), updatedAt: serverTimestamp() });
+  }
+  updateSectionUI(id);
+  updateSidebarProgress();
+}
+
+/* ── Render all sections ─────────────────────────────────── */
+function renderAll() {
+  renderSections();
+  renderNavItems();
+  updateSidebarProgress();
+}
+
+function renderSections() {
+  const container = document.getElementById('sections-container');
+  container.innerHTML = SECTIONS.map(s => {
+    const done      = _completed.includes(s.id);
+    const badgeHtml = s.badge
+      ? `<span class="nav-badge ${BADGE_CLASSES[s.badge]}">${BADGES[s.badge]}</span>`
+      : '';
+    return `
+      <div class="section-block" id="block-${s.id}">
+        <div class="section-header" onclick="toggleSection(${s.id})">
+          <span class="section-num">${MODULE_NUM}.${s.id}</span>
+          <span class="section-title">${s.title}</span>
+          ${badgeHtml}
+          ${done ? '<span style="color:#43A047;font-size:.85rem;">✓</span>' : ''}
+          <span class="section-toggle" id="toggle-${s.id}">▼</span>
+        </div>
+        <div class="section-body" id="body-${s.id}">
+          ${s.content}
+          <button class="complete-btn ${done ? 'done' : ''}"
+                  id="complete-btn-${s.id}"
+                  onclick="handleMarkComplete(${s.id})"
+                  ${done ? 'disabled' : ''}>
+            ${done ? '✅ Completed' : '✔ Mark as Completed'}
+          </button>
+          <span class="save-indicator" id="indicator-${s.id}"></span>
+        </div>
+      </div>`;
+  }).join('');
+
+  /* Auto-open first incomplete section */
+  const firstIncomplete = SECTIONS.find(s => !_completed.includes(s.id));
+  if (firstIncomplete) toggleSection(firstIncomplete.id);
+  else if (SECTIONS.length > 0) toggleSection(SECTIONS[0].id);
+}
+
+function renderNavItems() {
+  const nav = document.getElementById('nav-items');
+  nav.innerHTML = SECTIONS.map(s => {
+    const done  = _completed.includes(s.id);
+    const badge = s.badge ? `<span class="nav-badge ${BADGE_CLASSES[s.badge]}">${BADGES[s.badge]}</span>` : '';
+    return `<div class="nav-item ${done?'completed':''}" id="nav-${s.id}" onclick="scrollToSection(${s.id})">
+      <span>${MODULE_NUM}.${s.id} ${s.title}</span>${badge}
+    </div>`;
+  }).join('');
+}
+
+function updateSidebarProgress() {
+  const done = _completed.length;
+  const pct  = Math.round((done / SECTIONS.length) * 100);
+  document.getElementById('sidebar-bar').style.width = pct + '%';
+  document.getElementById('sidebar-pct').textContent  = pct + '%';
+}
+
+function updateSectionUI(id) {
+  const btn  = document.getElementById(`complete-btn-${id}`);
+  const nav  = document.getElementById(`nav-${id}`);
+  const blk  = document.getElementById(`block-${id}`);
+  if (btn) { btn.classList.add('done'); btn.disabled = true; btn.textContent = '✅ Completed'; }
+  if (nav) nav.classList.add('completed');
+  /* Add ✓ tick to section header */
+  const hdr  = blk?.querySelector('.section-header');
+  if (hdr && !hdr.querySelector('.done-tick')) {
+    const tick = document.createElement('span');
+    tick.className = 'done-tick';
+    tick.style.cssText = 'color:#43A047;font-size:.85rem;';
+    tick.textContent = '✓';
+    hdr.insertBefore(tick, hdr.querySelector('.section-toggle'));
+  }
+}
+
+/* ── Button click handler ────────────────────────────────── */
+window.handleMarkComplete = async function(id) {
+  const btn = document.getElementById(`complete-btn-${id}`);
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving…';
+  const ind = document.getElementById(`indicator-${id}`);
+  if (ind) ind.textContent = 'Saving…';
+  await markComplete(id);
+  if (ind) { ind.textContent = 'Saved ✓'; setTimeout(() => ind.textContent = '', 2000); }
+};
+
+/* ── Accordion toggle ────────────────────────────────────── */
+window.toggleSection = function(id) {
+  SECTIONS.forEach(s => {
+    const body   = document.getElementById(`body-${s.id}`);
+    const toggle = document.getElementById(`toggle-${s.id}`);
+    const nav    = document.getElementById(`nav-${s.id}`);
+    if (s.id === id) {
+      const isOpen = body.classList.contains('open');
+      body.classList.toggle('open', !isOpen);
+      toggle?.classList.toggle('open', !isOpen);
+      nav?.classList.toggle('active', !isOpen);
+    } else {
+      body.classList.remove('open');
+      toggle?.classList.remove('open');
+      nav?.classList.remove('active');
+    }
+  });
+};
+
+window.scrollToSection = function(id) {
+  toggleSection(id);
+  document.getElementById(`block-${id}`)?.scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+/* Keep this for theme toggle if needed — no-op by default */
+window.toggleTheme = () => {};
+window.markComplete = markComplete;
+</script>
+</body>
+</html>
