@@ -270,6 +270,7 @@ code,pre,.mono{font-family:var(--font-mono);}
       </div>
     </div>
     <div id="sections-container"></div><!-- Dynamically populated by JS -->
+    <div id="module-complete-control" style="margin-top:24px;"></div>
   </div>
 
 </div><!-- .layout -->
@@ -731,6 +732,8 @@ SUM(
 
 let _uid       = null;
 let _completed = [];   /* Array of completed section IDs for this module */
+let _email     = null;
+let _name      = null;
 
 /* ── Auth handlers ───────────────────────────────────────── */
 document.getElementById('signin-btn').addEventListener('click', () => {
@@ -749,6 +752,8 @@ onAuthStateChanged(auth, async user => {
       await signOut(auth); return;
     }
     _uid = user.uid;
+    _email = user.email;
+    _name  = user.displayName || user.email;
     document.getElementById('user-avatar').src  = user.photoURL || '';
     document.getElementById('user-name').textContent = user.displayName || user.email;
     document.getElementById('auth-overlay').style.display = 'none';
@@ -806,6 +811,7 @@ function renderAll() {
   renderSections();
   renderNavItems();
   updateSidebarProgress();
+  renderModuleCompleteControl();
 }
 
 function renderSections() {
@@ -917,6 +923,70 @@ window.scrollToSection = function(id) {
 /* Keep this for theme toggle if needed — no-op by default */
 window.toggleTheme = () => {};
 window.markComplete = markComplete;
+
+/* ── courseProgress: module-level completion ──────────────────
+   Writes to courseProgress/{uid} (separate from legacy progress writes).
+   moduleKey = this filename minus .html. UI-only "Redo module" toggle. */
+const COURSE_ID    = 'qjDLtUcbvyhf71ke1VzM';
+const MODULE_KEY_CP= 'tableau-module-5';
+let _redoMode = false;
+
+function renderModuleCompleteControl() {
+  const host = document.getElementById('module-complete-control');
+  if (!host) return;
+  const allDone = SECTIONS.length > 0 && SECTIONS.every(s => _completed.includes(s.id));
+  const moduleDone = allDone && !_redoMode;
+  host.innerHTML = `
+    <div style="border-top:1px solid var(--border);padding-top:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <button id="module-complete-btn" class="complete-btn ${moduleDone ? 'done' : ''}"
+              ${(!allDone || moduleDone) ? 'disabled' : ''}>
+        ${moduleDone ? '✅ Module Completed' : '✔ Mark module as complete'}
+      </button>
+      ${moduleDone ? '<button id="module-redo-btn" class="nav-btn secondary" style="margin:0;">↺ Redo module</button>' : ''}
+      <span class="save-indicator" id="module-complete-indicator">${allDone ? '' : 'Complete all sections to unlock'}</span>
+    </div>`;
+  const cbtn = document.getElementById('module-complete-btn');
+  if (cbtn && allDone && !moduleDone) cbtn.addEventListener('click', handleModuleComplete);
+  const rbtn = document.getElementById('module-redo-btn');
+  if (rbtn) rbtn.addEventListener('click', () => { _redoMode = true; renderModuleCompleteControl(); });
+}
+
+async function handleModuleComplete() {
+  if (!_uid) return;
+  const btn = document.getElementById('module-complete-btn');
+  const ind = document.getElementById('module-complete-indicator');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving…'; }
+  if (ind) ind.textContent = 'Saving…';
+  try {
+    const ref  = doc(db, 'courseProgress', _uid);
+    const snap = await getDoc(ref);
+    const nowIso = new Date().toISOString();
+    const base = {
+      email: _email,
+      name:  _name,
+      [`courses.${COURSE_ID}.modules.${MODULE_KEY_CP}`]: { completedOn: nowIso, completedAt: serverTimestamp() }
+    };
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        email: _email, name: _name,
+        courseStartedOn: nowIso, courseStartedAt: serverTimestamp(),
+        courses: { [COURSE_ID]: { modules: { [MODULE_KEY_CP]: { completedOn: nowIso, completedAt: serverTimestamp() } } } }
+      });
+    } else {
+      const d = snap.data() || {};
+      const upd = { ...base };
+      if (!d.courseStartedOn) { upd.courseStartedOn = nowIso; upd.courseStartedAt = serverTimestamp(); }
+      await updateDoc(ref, upd);
+    }
+    _redoMode = false;
+    renderModuleCompleteControl();
+    if (ind) { ind.textContent = 'Saved ✓'; setTimeout(() => { const i=document.getElementById('module-complete-indicator'); if(i) i.textContent=''; }, 2000); }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '✔ Mark module as complete'; }
+    if (ind) ind.textContent = 'Save failed — retry';
+  }
+}
+
 </script>
 </body>
 </html>
