@@ -232,6 +232,8 @@ footer{background:var(--white);border-top:1px solid var(--border);padding:24px 3
         <div class="stat-cell"><div class="num" id="stat-rem">42</div><div class="lbl">Remaining</div></div>
       </div>
       <button id="resume-btn" onclick="resumeLearning()">🚀 Start Learning</button>
+      <button id="cp-sync-btn" onclick="tbSyncCourseProgress()" style="display:block;width:100%;margin-top:12px;background:#475569;color:#fff;border:none;border-radius:8px;padding:13px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;">🔄 Sync my course progress</button>
+      <div id="cp-sync-status" style="margin-top:10px;font-size:13px;line-height:1.5;text-align:center;"></div>
     </div>
   </div>
 
@@ -441,6 +443,7 @@ const MODULE_CFG = [
 const TOTAL = 42;
 
 let _progress = {};
+let _cpUser = null;
 
 /* ── Auth ─────────────────────────────────────────────────── */
 document.getElementById('signin-btn').addEventListener('click', async () => {
@@ -461,6 +464,7 @@ onAuthStateChanged(auth, async user => {
     }
     document.getElementById('auth-overlay').style.display = 'none';
     document.getElementById('loading-overlay').style.display = 'flex';
+    _cpUser = user;
     await loadProgress(user);
     document.getElementById('loading-overlay').style.display = 'none';
     document.getElementById('app').style.display = 'block';
@@ -544,6 +548,56 @@ async function loadProgress(user) {
     examBtn.style.cssText += 'background:var(--blue);color:#fff;border-color:var(--blue);';
   }
 }
+
+/* ── Sync completed modules → courseProgress (admin reader) ──
+   Reads progress/{uid}.tb{n} (already in _progress), writes fully-
+   complete modules to courseProgress.courses[CP_COURSE_ID].modules.
+   Read-then-merge, preserves existing completions, safe to re-run. */
+const CP_COURSE_ID = 'qjDLtUcbvyhf71ke1VzM';
+window.tbSyncCourseProgress = async function() {
+  const statusEl = document.getElementById('cp-sync-status');
+  const setStatus = (m,c) => { statusEl.textContent = m; statusEl.style.color = c || 'var(--muted)'; };
+  if (!_cpUser) { setStatus('Please sign in first.', '#e67e22'); return; }
+  setStatus('Syncing…');
+  try {
+    const completeKeys = MODULE_CFG
+      .filter(m => (_progress[m.key] || []).length >= m.total)
+      .map(m => `tableau-module-${m.n}`);
+    if (!completeKeys.length) { setStatus('No fully-completed modules found to sync yet.', '#e67e22'); return; }
+
+    const pad = x => String(x).padStart(2,'0');
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+    const ref  = doc(db, 'courseProgress', _cpUser.uid);
+    const snap = await getDoc(ref);
+    const data = snap.exists() ? (snap.data() || {}) : {};
+    const course = (data.courses && data.courses[CP_COURSE_ID]) || {};
+    const mods = course.modules || {};
+
+    const courseUpdate = { modules: {} };
+    if (!course.courseStartedOn) { courseUpdate.courseStartedOn = dateStr; courseUpdate.courseStartedAt = timeStr; }
+    completeKeys.forEach(mk => {
+      if (mods[mk] && mods[mk].completedOn) return;
+      courseUpdate.modules[mk] = { completedOn: dateStr, completedAt: timeStr };
+    });
+    const allKeys = MODULE_CFG.map(m => `tableau-module-${m.n}`);
+    const willComplete = allKeys.every(mk => (mods[mk] && mods[mk].completedOn) || courseUpdate.modules[mk]);
+    if (willComplete && !course.courseCompletedOn) {
+      courseUpdate.courseCompletedOn = dateStr; courseUpdate.courseCompletedAt = timeStr;
+    }
+    const upd = { email: _cpUser.email, name: _cpUser.displayName || _cpUser.email, courses: {} };
+    upd.courses[CP_COURSE_ID] = courseUpdate;
+    await setDoc(ref, upd, { merge: true });
+
+    setStatus(`✓ Synced ${completeKeys.length} of ${MODULE_CFG.length} module(s)` +
+      (willComplete ? ' — course complete.' : '.') + ' It will appear in the admin Course Progress view.', '#16a34a');
+  } catch (e) {
+    setStatus('Sync failed: ' + e.message, '#c0392b');
+    console.warn('[tableau sync]', e);
+  }
+};
 
 /* Resume / Start navigation */
 window.resumeLearning = function() {
